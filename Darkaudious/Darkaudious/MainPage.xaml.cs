@@ -204,6 +204,8 @@ namespace Darkaudious
         int CurrentMood = 0;
 
 
+        AudioManager AudioManager;
+
         public string[] Moods =
         {
             "FURIOUS",
@@ -256,6 +258,14 @@ namespace Darkaudious
                 UseMockLocation = true;
             }
 
+
+            AudioManager = new AudioManager();
+
+            int[] one = AudioManager.GetRandomTriad(Numbers.GetNextRandom(0, 11), Numbers.GetNextRandom(0, 3));
+
+            int[] triad1 = AudioManager.GetMajorTriad((int)AudioManager.StandardNotes._A, Numbers.GetNextRandom(0, 2));
+            int[] triad2 = AudioManager.GetRandomTriad((int)AudioManager.StandardNotes._A, Numbers.GetNextRandom(0, 2));
+            int[] triad3 = AudioManager.GetMinorTriad((int)AudioManager.StandardNotes._A, Numbers.GetNextRandom(0, 2));
 
             InfoPoints.Add("", "CONTROLS");
             InfoPoints.Add("power2off.png", "POWER ON/OFF - switches Darkaudious System on and off. Switching off will clear all data");

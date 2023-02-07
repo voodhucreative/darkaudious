@@ -1,4 +1,9 @@
 ﻿using System;
+using static Darkaudious.Helpers.Fonts;
+using System.Collections.Generic;
+using Xamarin.Essentials;
+using Xamarin.Forms.Shapes;
+
 namespace Darkaudious.Helpers
 {
 	public class AudioManager
@@ -111,13 +116,79 @@ namespace Darkaudious.Helpers
             LLL
         }
 
+        public Dictionary<int, string> NoteDictionary = new Dictionary<int, string>
+        {
+            [(int)Notes.ShortA] = "ShortA",
+            [(int)Notes.ShortASharp] = "ShortASharp",
+            [(int)Notes.ShortB] = "ShortB",
+            [(int)Notes.ShortC] = "ShortC",
+            [(int)Notes.ShortCSharp] = "ShortCSharp",
+            [(int)Notes.ShortD] = "ShortD",
+            [(int)Notes.ShortDSharp] = "ShortDSharp",
+            [(int)Notes.ShortE] = "ShortE",
+            [(int)Notes.ShortF] = "ShortF",
+            [(int)Notes.ShortFSharp] = "ShortFSharp",
+            [(int)Notes.ShortG] = "ShortG",
+            [(int)Notes.ShortGSharp] = "ShortGSharp",
+            [(int)Notes.MidA] = "MidA",
+            [(int)Notes.MidASharp] = "MidASharp",
+            [(int)Notes.MidB] = "MidB",
+            [(int)Notes.MidC] = "MidC",
+            [(int)Notes.MidCSharp] = "MidCSharp",
+            [(int)Notes.MidD] = "MidD",
+            [(int)Notes.MidDSharp] = "MidDSharp",
+            [(int)Notes.MidE] = "MidE",
+            [(int)Notes.MidF] = "MidF",
+            [(int)Notes.MidFSharp] = "MidFSharp",
+            [(int)Notes.MidG] = "MidG",
+            [(int)Notes.MidGSharp] = "MidGSharp",
+            [(int)Notes.LongA] = "LongA",
+            [(int)Notes.LongASharp] = "LongASharp",
+            [(int)Notes.LongB] = "LongB",
+            [(int)Notes.LongC] = "LongC",
+            [(int)Notes.LongCSharp] = "LongCSharp",
+            [(int)Notes.LongD] = "LongD",
+            [(int)Notes.LongDSharp] = "LongDSharp",
+            [(int)Notes.LongE] = "LongE",
+            [(int)Notes.LongF] = "LongF",
+            [(int)Notes.LongFSharp] = "LongFSharp",
+            [(int)Notes.LongG] = "LongG",
+            [(int)Notes.LongGSharp] = "LongGSharp",
+        };
+
+
+        public AudioManager()
+        {
+
+        }
+
+        public void PlayNote(int note)
+        {
+            //play note notes[note]
+            if (note >= NoteDictionary.Count)
+            {
+                note = NoteDictionary.Count - 1;
+            }
+            Console.WriteLine("Play: " + NoteDictionary[note]);
+        }
+
+        public void PlayNote(int length, int note)
+        {
+            if (note >= NoteDictionary.Count)
+            {
+                note = NoteDictionary.Count - 1;
+            }
+            PlayNote(GetNote(length, note));
+        }
 
         public int GetNote(int length, int note)
         {
             int noteId = 0;
+            noteId = note + (length*12);
 
-            noteId = note * length;
-            
+            //Console.WriteLine("Length: " + length + ", Note: " + note);
+            //Console.WriteLine("NoteId: " + noteId);
+
             return noteId;
         }
 
@@ -243,15 +314,6 @@ namespace Darkaudious.Helpers
             int[] notes = new int[3];
             switch(rootNote)
             {
-                case (int)StandardNotes._A:
-                    notes = new int [] { (int)StandardNotes._A, (int)StandardNotes._CSharp, (int)StandardNotes._E };
-                    break;
-                case (int)StandardNotes._ASharp:
-                    notes = new int[] { (int)StandardNotes._ASharp, (int)StandardNotes._D, (int)StandardNotes._F };
-                    break;
-                case (int)StandardNotes._B:
-                    notes = new int[] { (int)StandardNotes._B, (int)StandardNotes._DSharp, (int)StandardNotes._FSharp };
-                    break;
                 case (int)StandardNotes._C:
                     notes = new int[] { (int)StandardNotes._C, (int)StandardNotes._E, (int)StandardNotes._G };
                     break;
@@ -279,6 +341,15 @@ namespace Darkaudious.Helpers
                 case (int)StandardNotes._GSharp:
                     notes = new int[] { (int)StandardNotes._GSharp, (int)StandardNotes._C, (int)StandardNotes._DSharp };
                     break;
+                case (int)StandardNotes._A:
+                    notes = new int[] { (int)StandardNotes._A, (int)StandardNotes._CSharp, (int)StandardNotes._E };
+                    break;
+                case (int)StandardNotes._ASharp:
+                    notes = new int[] { (int)StandardNotes._ASharp, (int)StandardNotes._D, (int)StandardNotes._F };
+                    break;
+                case (int)StandardNotes._B:
+                    notes = new int[] { (int)StandardNotes._B, (int)StandardNotes._DSharp, (int)StandardNotes._FSharp };
+                    break;
             }
 
             if (inversion == 3) // random
@@ -299,15 +370,6 @@ namespace Darkaudious.Helpers
             int[] notes = new int[3];
             switch (rootNote)
             {
-                case (int)StandardNotes._A:
-                    notes = new int[] { (int)StandardNotes._A, (int)StandardNotes._C, (int)StandardNotes._E };
-                    break;
-                case (int)StandardNotes._ASharp:
-                    notes = new int[] { (int)StandardNotes._ASharp, (int)StandardNotes._CSharp, (int)StandardNotes._F };
-                    break;
-                case (int)StandardNotes._B:
-                    notes = new int[] { (int)StandardNotes._B, (int)StandardNotes._D, (int)StandardNotes._FSharp };
-                    break;
                 case (int)StandardNotes._C:
                     notes = new int[] { (int)StandardNotes._C, (int)StandardNotes._DSharp, (int)StandardNotes._G };
                     break;
@@ -334,6 +396,15 @@ namespace Darkaudious.Helpers
                     break;
                 case (int)StandardNotes._GSharp:
                     notes = new int[] { (int)StandardNotes._GSharp, (int)StandardNotes._B, (int)StandardNotes._DSharp };
+                    break;
+                case (int)StandardNotes._A:
+                    notes = new int[] { (int)StandardNotes._A, (int)StandardNotes._C, (int)StandardNotes._E };
+                    break;
+                case (int)StandardNotes._ASharp:
+                    notes = new int[] { (int)StandardNotes._ASharp, (int)StandardNotes._CSharp, (int)StandardNotes._F };
+                    break;
+                case (int)StandardNotes._B:
+                    notes = new int[] { (int)StandardNotes._B, (int)StandardNotes._D, (int)StandardNotes._FSharp };
                     break;
 
             }
@@ -386,9 +457,7 @@ namespace Darkaudious.Helpers
             return notes;
         }
 
-        public AudioManager()
-		{
-		}
+        
 	}
 }
 

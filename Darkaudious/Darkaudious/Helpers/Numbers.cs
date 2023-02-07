@@ -7,14 +7,14 @@ namespace Darkaudious.Helpers
         {
             Random rand = new Random();
 
-            return rand.Next(0, num);
+            return rand.Next(0, num+1);
         }
 
         public static int GetNextRandom(int min, int max)
         {
             Random rand = new Random();
 
-            return (int)rand.Next(min, max);
+            return (int)rand.Next(min, max+1);
         }
     }
 }

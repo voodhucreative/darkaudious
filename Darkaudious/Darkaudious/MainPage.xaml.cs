@@ -261,11 +261,78 @@ namespace Darkaudious
 
             AudioManager = new AudioManager();
 
-            int[] one = AudioManager.GetRandomTriad(Numbers.GetNextRandom(0, 11), Numbers.GetNextRandom(0, 3));
+            
+            int[] MajorTriad = AudioManager.GetMajorTriad(Numbers.GetNextRandom(0, 11), Numbers.GetNextRandom(0, 2));
+            int[] MinorTriad = AudioManager.GetMinorTriad(Numbers.GetNextRandom(0, 11), Numbers.GetNextRandom(0, 2));
+            int[] DischordantTriad = AudioManager.GetDischordantTriad(Numbers.GetNextRandom(0, 11), Numbers.GetNextRandom(0, 2));
+            int[] RandomTriad = AudioManager.GetRandomTriad(Numbers.GetNextRandom(0, 11), Numbers.GetNextRandom(0, 2));
 
-            int[] triad1 = AudioManager.GetMajorTriad((int)AudioManager.StandardNotes._A, Numbers.GetNextRandom(0, 2));
-            int[] triad2 = AudioManager.GetRandomTriad((int)AudioManager.StandardNotes._A, Numbers.GetNextRandom(0, 2));
-            int[] triad3 = AudioManager.GetMinorTriad((int)AudioManager.StandardNotes._A, Numbers.GetNextRandom(0, 2));
+            List<int> allNotes = new List<int>();
+
+            int[] AMajor = AudioManager.GetMajorTriad((int)AudioManager.StandardNotes._A, 0);
+            Console.WriteLine("Variable Length");
+            foreach (int n in AMajor)
+            {
+                AudioManager.PlayNote(Numbers.GetNextRandom(0, 2), n);
+            }
+
+            Console.WriteLine("Short Length");
+            foreach (int n in AMajor)
+            {
+                AudioManager.PlayNote((int)AudioManager.NoteLengths.Short, n);
+            }
+
+            Console.WriteLine("Mid Length");
+            foreach (int n in AMajor)
+            {
+                AudioManager.PlayNote((int)AudioManager.NoteLengths.Mid, n);
+            }
+
+            Console.WriteLine("Long Length");
+            foreach (int n in AMajor)
+            {
+                AudioManager.PlayNote((int)AudioManager.NoteLengths.Long, n);
+            }
+
+            Console.WriteLine("Fixed Length");
+            foreach (int n in AMajor)
+            {
+                AudioManager.PlayNote(n);
+            }
+
+            Console.WriteLine("Major Triad");
+            foreach (int n in MajorTriad)
+            {
+                AudioManager.PlayNote(Numbers.GetNextRandom(0, 2), n);
+                AudioManager.PlayNote(n);
+            }
+
+            Console.WriteLine("Minor Triad");
+            foreach (int n in MinorTriad)
+            {
+                AudioManager.PlayNote(Numbers.GetNextRandom(0, 2), n);
+                AudioManager.PlayNote(n);
+            }
+
+            Console.WriteLine("Random Triad");
+            foreach (int n in RandomTriad)
+            {
+                AudioManager.PlayNote(Numbers.GetNextRandom(0, 2), n);
+                AudioManager.PlayNote(n);
+            }
+
+            Console.WriteLine("Dischordant Triad");
+            foreach (int n in DischordantTriad)
+            {
+                AudioManager.PlayNote(Numbers.GetNextRandom(0, 2), n);
+                AudioManager.PlayNote(n);
+            }
+
+            Console.WriteLine("Random Notes");
+            for (int i=0; i<200; i++)
+            {
+                AudioManager.PlayNote(Numbers.GetNextRandom(0, 2), Numbers.GetNextRandom(0, 12));
+            }
 
             InfoPoints.Add("", "CONTROLS");
             InfoPoints.Add("power2off.png", "POWER ON/OFF - switches Darkaudious System on and off. Switching off will clear all data");

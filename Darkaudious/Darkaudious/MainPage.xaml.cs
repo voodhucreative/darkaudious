@@ -59,6 +59,8 @@ namespace Darkaudious
         StoppableTimer ScanTimer;
         StoppableTimer LogoAnimTimer;
 
+        StoppableTimer AudioTimer;
+
         bool PerformingEvent;
 
         ISimpleAudioPlayer AudioPlayer;
@@ -245,6 +247,13 @@ namespace Darkaudious
 
         public Dictionary<string, string> InfoPoints = new Dictionary<string, string>();
 
+        int[] MajorTriad;
+        int[] MinorTriad;
+        int[] DischordantTriad;
+        int[] RandomTriad;
+        List<int> LongNotes;
+
+        int notePosition;
 
         public MainPage()
         {
@@ -262,11 +271,34 @@ namespace Darkaudious
             AudioManager = new AudioManager();
 
             
-            int[] MajorTriad = AudioManager.GetMajorTriad(Numbers.GetNextRandom(0, 11), Numbers.GetNextRandom(0, 2));
-            int[] MinorTriad = AudioManager.GetMinorTriad(Numbers.GetNextRandom(0, 11), Numbers.GetNextRandom(0, 2));
-            int[] DischordantTriad = AudioManager.GetDischordantTriad(Numbers.GetNextRandom(0, 11), Numbers.GetNextRandom(0, 2));
-            int[] RandomTriad = AudioManager.GetRandomTriad(Numbers.GetNextRandom(0, 11), Numbers.GetNextRandom(0, 2));
+            MajorTriad = AudioManager.GetMajorTriad(Numbers.GetNextRandom(0, 11), Numbers.GetNextRandom(0, 2));
+            MinorTriad = AudioManager.GetMinorTriad(Numbers.GetNextRandom(0, 11), Numbers.GetNextRandom(0, 2));
+            DischordantTriad = AudioManager.GetDischordantTriad(Numbers.GetNextRandom(0, 11), Numbers.GetNextRandom(0, 2));
+            RandomTriad = AudioManager.GetRandomTriad(Numbers.GetNextRandom(0, 11), Numbers.GetNextRandom(0, 2));
 
+            LongNotes = new List<int>();
+
+            for (int i=0; i<10; i++)
+            {
+                /*
+                MinorTriad = AudioManager.GetMinorTriad(Numbers.GetNextRandom(0, 11), Numbers.GetNextRandom(0, 2));
+                foreach(int n in MinorTriad)
+                {
+                    LongNotes.Add(n);
+                }*/
+
+                /*
+                MajorTriad = AudioManager.GetMajorTriad(Numbers.GetNextRandom(0, 11), Numbers.GetNextRandom(0, 2));
+                foreach (int n in MajorTriad)
+                {
+                    LongNotes.Add(n);
+                }*/
+                LongNotes.Add(AudioManager.GetNote(Numbers.GetNextRandom(0, 2), Numbers.GetNextRandom(0, 11)));
+            }
+
+
+            notePosition = 0;
+            /*
             List<int> allNotes = new List<int>();
 
             int[] AMajor = AudioManager.GetMajorTriad((int)AudioManager.StandardNotes._A, 0);
@@ -331,8 +363,9 @@ namespace Darkaudious
             Console.WriteLine("Random Notes");
             for (int i=0; i<200; i++)
             {
-                AudioManager.PlayNote(Numbers.GetNextRandom(0, 2), Numbers.GetNextRandom(0, 12));
+                //AudioManager.PlayNote(Numbers.GetNextRandom(0, 2), Numbers.GetNextRandom(0, 12));
             }
+            */
 
             InfoPoints.Add("", "CONTROLS");
             InfoPoints.Add("power2off.png", "POWER ON/OFF - switches Darkaudious System on and off. Switching off will clear all data");
@@ -1415,6 +1448,9 @@ namespace Darkaudious
 
             ScanTimer = new StoppableTimer(TimeSpan.FromMilliseconds(250), ScanUpdate, true);
 
+            AudioTimer = new StoppableTimer(TimeSpan.FromMilliseconds(250), AudioUpdate, true);
+            AudioTimer.Start();
+
             Accelerometer.ReadingChanged += Accelerometer_ReadingChanged;
 
             try
@@ -1992,6 +2028,30 @@ namespace Darkaudious
                 }
                 ScanFrequency += 1.0f;
                 ScanSpeedLabel.Text = "SCAN RATE:" + (MaxFrequency - (ScanFrequency));
+            }
+        }
+
+        int skip = 0;
+        public void AudioUpdate()
+        {
+            //int[] notes = MajorTriad;
+            int[] notes = LongNotes.ToArray();
+            int length = Numbers.GetNextRandom(0, 2);
+            skip = length;
+
+            if (skip > 0)
+            {
+                skip--;
+            }
+            else
+            {
+                AudioManager.PlayNote(length, notes[notePosition]);
+                notePosition++;
+
+                if (notePosition >= notes.Length)
+                {
+                    notePosition = 0;
+                }
             }
         }
 

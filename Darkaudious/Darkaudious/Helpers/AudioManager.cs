@@ -3,11 +3,15 @@ using static Darkaudious.Helpers.Fonts;
 using System.Collections.Generic;
 using Xamarin.Essentials;
 using Xamarin.Forms.Shapes;
+using Plugin.SimpleAudioPlayer;
 
 namespace Darkaudious.Helpers
 {
 	public class AudioManager
 	{
+
+        ISimpleAudioPlayer AudioPlayer;
+
         public enum StandardNotes
         {
             _A,
@@ -156,11 +160,85 @@ namespace Darkaudious.Helpers
             [(int)Notes.LongGSharp] = "LongGSharp",
         };
 
-
         public AudioManager()
         {
-
+            AudioPlayer = Plugin.SimpleAudioPlayer.CrossSimpleAudioPlayer.Current;
         }
+
+        public string GetAudioFileName(int note)
+        {
+            string fileToPlay = "";
+            
+            switch(note)
+            {
+                case (int)Notes.ShortA:
+                case (int)Notes.MidA:
+                case (int)Notes.LongA:
+                    fileToPlay = "A3.mp3";
+                    break;
+                case (int)Notes.ShortASharp:
+                case (int)Notes.MidASharp:
+                case (int)Notes.LongASharp:
+                    fileToPlay = "Bb3.mp3";
+                    break;
+                case (int)Notes.ShortB:
+                case (int)Notes.MidB:
+                case (int)Notes.LongB:
+                    fileToPlay = "B3.mp3";
+                    break;
+                case (int)Notes.ShortC:
+                case (int)Notes.MidC:
+                case (int)Notes.LongC:
+                    fileToPlay = "C3.mp3";
+                    break;
+                case (int)Notes.ShortCSharp:
+                case (int)Notes.MidCSharp:
+                case (int)Notes.LongCSharp:
+                    fileToPlay = "Db3.mp3";
+                    break;
+                case (int)Notes.ShortD:
+                case (int)Notes.MidD:
+                case (int)Notes.LongD:
+                    fileToPlay = "D3.mp3";
+                    break;
+                case (int)Notes.ShortDSharp:
+                case (int)Notes.MidDSharp:
+                case (int)Notes.LongDSharp:
+                    fileToPlay = "Eb3.mp3";
+                    break;
+                case (int)Notes.ShortE:
+                case (int)Notes.MidE:
+                case (int)Notes.LongE:
+                    fileToPlay = "E3.mp3";
+                    break;
+                case (int)Notes.ShortF:
+                case (int)Notes.MidF:
+                case (int)Notes.LongF:
+                    fileToPlay = "F3.mp3";
+                    break;
+                case (int)Notes.ShortFSharp:
+                case (int)Notes.MidFSharp:
+                case (int)Notes.LongFSharp:
+                    fileToPlay = "Gb3.mp3";
+                    break;
+                case (int)Notes.ShortG:
+                case (int)Notes.MidG:
+                case (int)Notes.LongG:
+                    fileToPlay = "G3.mp3";
+                    break;
+                case (int)Notes.ShortGSharp:
+                case (int)Notes.MidGSharp:
+                case (int)Notes.LongGSharp:
+                    fileToPlay = "Ab3.mp3";
+                    break;
+
+            }
+
+            fileToPlay = NoteDictionary[note] + ".mp3";
+            Console.WriteLine("Playing: " + fileToPlay);
+            return fileToPlay;
+        }
+
 
         public void PlayNote(int note)
         {
@@ -170,6 +248,18 @@ namespace Darkaudious.Helpers
                 note = NoteDictionary.Count - 1;
             }
             Console.WriteLine("Play: " + NoteDictionary[note]);
+
+            try
+            {
+                //AudioPlayer.Volume = volume;
+                AudioPlayer.Load(GetAudioFileName(note));
+                AudioPlayer.Play();
+            }
+            catch (Exception e)
+            {
+
+            }
+
         }
 
         public void PlayNote(int length, int note)
@@ -186,8 +276,8 @@ namespace Darkaudious.Helpers
             int noteId = 0;
             noteId = note + (length*12);
 
-            //Console.WriteLine("Length: " + length + ", Note: " + note);
-            //Console.WriteLine("NoteId: " + noteId);
+            Console.WriteLine("Length: " + length + ", Note: " + note);
+            Console.WriteLine("NoteId: " + noteId);
 
             return noteId;
         }

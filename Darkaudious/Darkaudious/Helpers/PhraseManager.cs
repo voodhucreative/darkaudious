@@ -193,12 +193,224 @@ namespace Darkaudious.Helpers
             "TOO MUCH PAIN"
         };
 
+        public string[] Mutterings =
+        {
+            "Q",
+            "W",
+            "E",
+            "R",
+            "T",
+            "Y",
+            "U",
+            "I",
+            "O",
+            "P",
+            "A",
+            "S",
+            "D",
+            "F",
+            "G",
+            "H",
+            "J",
+            "K",
+            "L",
+            "Z",
+            "X",
+            "C",
+            "V",
+            "B",
+            "N",
+            "M",
+            "1",
+            "2",
+            "Hur",
+            "Yur",
+            "Me",
+            "Ah",
+            "Ush",
+            "Eesh",
+            "You",
+            "Shhh",
+            "Oh",
+            "Go",
+            "No",
+            "Du",
+            "Yes",
+            "Ah",
+            "up",
+            "Dee",
+            "Ah",
+            "CHUT",
+            "rush",
+            "too",
+            "tuh",
+            "free",
+            "Ah",
+            "Hell",
+            "shoo",
+            "high",
+            "Pea",
+            "Sea",
+            "Ex",
+            "Why",
+            "hair",
+            "key",
+            "Kay",
+            "jay",
+            "hay",
+            "Bee",
+            "Hell",
+            "at",
+            "the one",
+            "the",
+            "kiss",
+            "beast",
+            "hum",
+            "dee",
+            "dared",
+            "Shhhhhhhhhh",
+            "err",
+            "ha",
+            "Dee eye eeh",
+            "hike",
+            "ire fee fe",
+            "chill",
+            "one",
+            "two",
+            "three",
+            "live",
+            "hide",
+            "hurt",
+            "run",
+            "door",
+            "knock",
+            "sound",
+            "move",
+            "step",
+            "foot",
+            "point",
+            "finger",
+            "smell",
+            "fall",
+            "mmm",
+            "hung"
+        };
+
+        string[] DefaultPhrase =
+        {
+            "I",
+            "AM",
+            "DARK",
+            "AUDIOUS",
+            "Fuck you",
+            "You stupid mutherfucker"
+        };
+
+        string[] SessionPhrase1 = { };
+        string[] SessionPhrase2 = { };
+        string[] SessionPhrase3 = { };
+        string[] SessionPhrase4 = { };
+
 
         public PhraseManager()
         {
             MaxWordLength = 8;
             Dictionary = PopulateDictionary();
             PopulateSessionDictionary();
+        }
+
+        public string[] GetDarkPhrase()
+        {
+            DefaultPhrase = new string[Numbers.GetNextRandom(4, 16)];
+
+            for(int i=0; i<DefaultPhrase.Length; i++)
+            {
+                if (Numbers.GetNextRandom(0, 100) > 50)
+                {
+                    DefaultPhrase[i] = GetDemoPhrase();
+                }
+                else
+                {
+                    DefaultPhrase[i] = GetMuttering();
+                }
+                
+            }
+            return ProcessPhraseEmphasis(DefaultPhrase);
+            //return ProcessPhraseEmphasis(DemoPhrases);
+        }
+
+        public string[] GetSessionPhrase(int num)
+        {
+            string[] phrase = SessionPhrase1;
+            switch (num)
+            {
+                case 0:
+                    phrase = SessionPhrase1;
+                    break;
+                case 1:
+                    phrase = SessionPhrase1;
+                    break;
+                case 2:
+                    phrase = SessionPhrase2;
+                    break;
+                case 3:
+                    phrase = SessionPhrase3;
+                    break;
+                case 4:
+                    phrase = SessionPhrase4;
+                    break;
+                default:
+                    phrase = SessionPhrase4;
+                    break;
+            }
+            return ProcessPhraseEmphasis(phrase);
+        }
+
+        public string[] GetSessionPhrase()
+        {
+            return GetSessionPhrase(Numbers.GetNextRandom(0, 3));
+        }
+
+
+
+        string[] ProcessPhraseEmphasis(string[] input)
+        {
+            string[] output = input;
+
+            int truncations = Numbers.GetNextRandom(0, input.Length - 1);
+            int newLength = input.Length - truncations;
+
+            if (truncations >= input.Length)
+            {
+                truncations = 0;
+            }
+            
+            if (truncations > 0)
+            {
+                newLength = input.Length - truncations;
+                output = new string[newLength];
+                int pos = 0;
+                foreach(string s in input)
+                {
+                    output[pos] += s;
+                    output[pos] += " ";
+                    if (Numbers.GetNextRandom(0, 100) > 50 && pos < newLength-1)
+                    {
+                        pos++;
+                    }
+                }
+            }
+
+            int outpos = 0;
+            foreach (string s in output)
+            {
+                if (s == null)
+                {
+                    output[outpos] = GetMuttering();
+                }
+                outpos++;
+            }
+            return output;
         }
 
         public void SetMaxWordLength(int maxLength)
@@ -264,6 +476,39 @@ namespace Darkaudious.Helpers
                 Console.WriteLine(word);
             }
             Console.WriteLine("-------- END UNIQUE KEYS --------");
+
+            SessionPhrase1 = new string[Numbers.GetNextRandom(2, 5)];
+            SessionPhrase2 = new string[Numbers.GetNextRandom(2, 5)];
+            SessionPhrase3 = new string[Numbers.GetNextRandom(2, 5)];
+            SessionPhrase4 = new string[Numbers.GetNextRandom(2, 5)];
+
+            for (int i=0; i<SessionPhrase1.Length; i++)
+            {
+                SessionPhrase1[i] = SessionDictionary[Numbers.GetNextRandom(1, SessionDictionary.Count-1)];
+            }
+            for (int i = 0; i < SessionPhrase2.Length; i++)
+            {
+                SessionPhrase2[i] = SessionDictionary[Numbers.GetNextRandom(1, SessionDictionary.Count-1)];
+            }
+            for (int i = 0; i < SessionPhrase3.Length; i++)
+            {
+                SessionPhrase3[i] = SessionDictionary[Numbers.GetNextRandom(1, SessionDictionary.Count-1)];
+            }
+            for (int i = 0; i < SessionPhrase4.Length; i++)
+            {
+                SessionPhrase4[i] = SessionDictionary[Numbers.GetNextRandom(1, SessionDictionary.Count-1)];
+            }
+            Console.WriteLine("-------- END SESSION KEYS --------");
+
+        }
+
+        public string GetSessionPhrases()
+        {
+            string sessionPhrases = "";
+
+
+
+            return sessionPhrases;
         }
 
         public List<string> PopulateDictionary()
@@ -304,6 +549,12 @@ namespace Darkaudious.Helpers
         public void PopulateSessionDictionary()
         {
             SessionDictionary = new List<string>();
+
+        }
+
+        public string GetMuttering()
+        {
+            return Mutterings[Numbers.GetNextRandom(0, Mutterings.Length - 1)].ToLower(); 
         }
 
         public string GetDemoPhrase()

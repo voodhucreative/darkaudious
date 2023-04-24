@@ -65,7 +65,6 @@ namespace Darkaudious.Droid
         {
             Xamarin.Essentials.Platform.OnRequestPermissionsResult(requestCode, permissions, grantResults);
 
-            _app.SayAwake();
 
             base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
         }

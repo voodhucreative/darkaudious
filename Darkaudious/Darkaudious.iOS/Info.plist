@@ -35,7 +35,7 @@
 	<key>XSAppIconAssets</key>
 	<string>Assets.xcassets/AppIcon.appiconset</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Deadcom needs to know your location, so we can help identify areas with strong paranormal activity.</string>
+	<string>Darkaudious needs to know your location, so we can help identify areas with strong paranormal activity.</string>
 	<key>UIStatusBarHidden</key>
 	<true/>
 	<key>UIRequiresFullScreen</key>

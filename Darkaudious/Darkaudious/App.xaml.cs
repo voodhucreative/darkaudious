@@ -22,14 +22,6 @@ namespace Darkaudious
 
         }
 
-        public void SayAwake()
-        {
-            Device.BeginInvokeOnMainThread(async () =>
-            {
-                mainPage.WakeyWakey();
-            });
-        }
-
         protected override void OnStart()
         {
         }

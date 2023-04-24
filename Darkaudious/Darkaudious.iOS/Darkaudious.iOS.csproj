@@ -25,7 +25,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <MtouchArch>x86_64</MtouchArch>
-    <MtouchLink>None</MtouchLink>
+    <MtouchLink>SdkOnly</MtouchLink>
     <MtouchDebug>true</MtouchDebug>
     <CodesignProvision>Automatic</CodesignProvision>
     <CodesignKey>iPhone Developer</CodesignKey>
@@ -82,20 +82,20 @@
     <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Icon-App-29x29%401x.png" />
     <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Icon-App-40x40%401x.png" />
     <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Icon-App-20x20%401x.png" />
-    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Icon-App-40x40%402x-1.png" />
-    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Icon-App-20x20%402x-1.png" />
     <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Icon-App-83.5x83.5%402x.png" />
     <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Icon-App-20x20%403x.png" />
     <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\ItunesArtwork%402x.png" />
     <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Icon-App-20x20%402x.png" />
     <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Icon-App-29x29%403x.png" />
     <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Icon-App-40x40%402x.png" />
-    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Icon-App-29x29%402x-1.png" />
     <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Icon-App-60x60%403x.png" />
     <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Icon-App-60x60%402x.png" />
     <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Icon-App-76x76%401x.png" />
     <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Icon-App-40x40%403x.png" />
     <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Icon-App-29x29%402x.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Icon-App-20x20%402x 1.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Icon-App-40x40%402x 1.png" />
+    <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Icon-App-29x29%402x 1.png" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -106,8 +106,8 @@
     <Reference Include="System.Numerics.Vectors" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Xamarin.Forms" Version="5.0.0.2545" />
-    <PackageReference Include="Xamarin.Essentials" Version="1.7.4" />
+    <PackageReference Include="Xamarin.Forms" Version="5.0.0.2578" />
+    <PackageReference Include="Xamarin.Essentials" Version="1.7.5" />
     <PackageReference Include="Xam.Plugin.SimpleAudioPlayer">
       <Version>1.6.0</Version>
     </PackageReference>
@@ -347,6 +347,34 @@
     <BundleResource Include="Resources\LongA.mp3" />
     <BundleResource Include="Resources\MidA.mp3" />
     <BundleResource Include="Resources\ShortA.mp3" />
+    <BundleResource Include="Resources\n9.mp3" />
+    <BundleResource Include="Resources\n8.mp3" />
+    <BundleResource Include="Resources\n7.mp3" />
+    <BundleResource Include="Resources\n3.mp3" />
+    <BundleResource Include="Resources\n2.mp3" />
+    <BundleResource Include="Resources\n6.mp3" />
+    <BundleResource Include="Resources\n5.mp3" />
+    <BundleResource Include="Resources\n4.mp3" />
+    <BundleResource Include="Resources\n1.mp3" />
+    <BundleResource Include="Resources\n0.mp3" />
+    <BundleResource Include="Resources\ma9.mp3" />
+    <BundleResource Include="Resources\ma8.mp3" />
+    <BundleResource Include="Resources\ma7.mp3" />
+    <BundleResource Include="Resources\ma5.mp3" />
+    <BundleResource Include="Resources\ma6.mp3" />
+    <BundleResource Include="Resources\ma4.mp3" />
+    <BundleResource Include="Resources\ma0.mp3" />
+    <BundleResource Include="Resources\ma3.mp3" />
+    <BundleResource Include="Resources\ma1.mp3" />
+    <BundleResource Include="Resources\ma2.mp3" />
+    <BundleResource Include="Resources\piano1.png" />
+    <BundleResource Include="Resources\damain_off.png" />
+    <BundleResource Include="Resources\damain_on.png" />
+    <BundleResource Include="Resources\switchOff.jpg" />
+    <BundleResource Include="Resources\switchOn.jpg" />
+    <BundleResource Include="Resources\switchOff.png" />
+    <BundleResource Include="Resources\switchOn.png" />
+    <BundleResource Include="Resources\pianokeys.jpg" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\words.txt" />

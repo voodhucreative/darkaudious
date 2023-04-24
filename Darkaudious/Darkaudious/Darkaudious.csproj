@@ -11,8 +11,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Xamarin.Forms" Version="5.0.0.2545" />
-    <PackageReference Include="Xamarin.Essentials" Version="1.7.4" />
+    <PackageReference Include="Xamarin.Forms" Version="5.0.0.2578" />
+    <PackageReference Include="Xamarin.Essentials" Version="1.7.5" />
     <PackageReference Include="Xam.Plugin.SimpleAudioPlayer" Version="1.6.0" />
     <PackageReference Include="Xam.Plugin.DeviceInfo" Version="4.1.1" />
   </ItemGroup>
@@ -21,9 +21,27 @@
     <None Remove="Services\" />
     <None Remove="Xam.Plugin.SimpleAudioPlayer" />
     <None Remove="Xam.Plugin.DeviceInfo" />
+    <None Remove="Resources\" />
+    <None Remove="Resources\Fonts\" />
+    <None Remove="Resources\Fonts\Aggressor.ttf" />
+    <None Remove="Resources\Fonts\XTypewriterRegular.ttf" />
+    <None Remove="Resources\Fonts\XTypewriterBold.ttf" />
+    <None Remove="Resources\Fonts\ghostclanleft.ttf" />
+    <None Remove="Resources\Fonts\mech.ttf" />
+    <None Remove="Resources\Fonts\Techfont.ttf" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Helpers\" />
     <Folder Include="Services\" />
+    <Folder Include="Resources\" />
+    <Folder Include="Resources\Fonts\" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Fonts\Aggressor.ttf" />
+    <EmbeddedResource Include="Resources\Fonts\XTypewriterRegular.ttf" />
+    <EmbeddedResource Include="Resources\Fonts\XTypewriterBold.ttf" />
+    <EmbeddedResource Include="Resources\Fonts\ghostclanleft.ttf" />
+    <EmbeddedResource Include="Resources\Fonts\mech.ttf" />
+    <EmbeddedResource Include="Resources\Fonts\Techfont.ttf" />
   </ItemGroup>
 </Project>

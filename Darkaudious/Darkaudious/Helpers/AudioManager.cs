@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Xamarin.Essentials;
 using Xamarin.Forms.Shapes;
 using Plugin.SimpleAudioPlayer;
+using static Darkaudious.Helpers.AudioManager;
 
 namespace Darkaudious.Helpers
 {
@@ -160,88 +161,221 @@ namespace Darkaudious.Helpers
             [(int)Notes.LongGSharp] = "LongGSharp",
         };
 
+        public int SoundSource;
+        public enum SoundSources
+        {
+            Piano, ToyPiano, Tone, Noise
+        }
+
+        public int SelectedInstrument=-1;
+        
+
         public AudioManager()
         {
+            //SelectedInstrument = (int)SoundSources.Piano;
+            SoundSource = (int)SoundSources.Noise;
             AudioPlayer = Plugin.SimpleAudioPlayer.CrossSimpleAudioPlayer.Current;
         }
 
-        public string GetAudioFileName(int note)
+        public void SetSoundSource(int soundSource)
+        {
+            switch(soundSource)
+            {
+                case (int)SoundSources.Noise:
+                case (int)SoundSources.Tone:
+                    SoundSource = soundSource;
+                    break;
+                default:
+                    if (SelectedInstrument < 0)
+                    {
+                        SelectedInstrument = soundSource;
+                        SoundSource = SelectedInstrument;
+                    }
+                    break;
+            }
+        }
+
+        public void SetInstrument(int soundSource)
+        {
+            SelectedInstrument = soundSource;
+            SoundSource = SelectedInstrument;
+        }
+
+        public List<int> GetMajorSequence()
+        {
+            List<int> notes = new List<int>();
+
+            int[] triad = null;
+
+            triad = GetMajorTriad((int)StandardNotes._A, 0); foreach (int n in triad) { notes.Add(n); }
+            triad = GetMajorTriad((int)StandardNotes._A, 0); foreach (int n in triad) { notes.Add(n); }
+            triad = GetMajorTriad((int)StandardNotes._A, 1); foreach (int n in triad) { notes.Add(n); }
+            triad = GetMajorTriad((int)StandardNotes._A, 1); foreach (int n in triad) { notes.Add(n); }
+            triad = GetMajorTriad((int)StandardNotes._D, 1); foreach (int n in triad) { notes.Add(n); }
+            triad = GetMajorTriad((int)StandardNotes._D, 1); foreach (int n in triad) { notes.Add(n); }
+            triad = GetMajorTriad((int)StandardNotes._A, 0); foreach (int n in triad) { notes.Add(n); }
+            triad = GetMajorTriad((int)StandardNotes._A, 0); foreach (int n in triad) { notes.Add(n); }
+            triad = GetMajorTriad((int)StandardNotes._E, 0); foreach (int n in triad) { notes.Add(n); }
+            triad = GetMajorTriad((int)StandardNotes._E, 0); foreach (int n in triad) { notes.Add(n); }
+            triad = GetMajorTriad((int)StandardNotes._D, 1); foreach (int n in triad) { notes.Add(n); }
+            triad = GetMajorTriad((int)StandardNotes._A, 1); foreach (int n in triad) { notes.Add(n); }
+
+            return notes;
+        }
+
+        public List<int> GetMinorSequence()
+        {
+            List<int> notes = new List<int>();
+
+            int[] triad = null;
+
+            triad = GetMinorTriad((int)StandardNotes._C, 0); foreach (int n in triad) { notes.Add(n); }
+            triad = GetMinorTriad((int)StandardNotes._C, 0); foreach (int n in triad) { notes.Add(n); }
+            triad = GetMinorTriad((int)StandardNotes._C, 1); foreach (int n in triad) { notes.Add(n); }
+            triad = GetMinorTriad((int)StandardNotes._C, 1); foreach (int n in triad) { notes.Add(n); }
+            triad = GetMinorTriad((int)StandardNotes._F, 1); foreach (int n in triad) { notes.Add(n); }
+            triad = GetMinorTriad((int)StandardNotes._F, 1); foreach (int n in triad) { notes.Add(n); }
+            triad = GetMinorTriad((int)StandardNotes._C, 0); foreach (int n in triad) { notes.Add(n); }
+            triad = GetMinorTriad((int)StandardNotes._C, 0); foreach (int n in triad) { notes.Add(n); }
+            triad = GetMinorTriad((int)StandardNotes._G, 0); foreach (int n in triad) { notes.Add(n); }
+            triad = GetMinorTriad((int)StandardNotes._G, 0); foreach (int n in triad) { notes.Add(n); }
+            triad = GetMinorTriad((int)StandardNotes._F, 1); foreach (int n in triad) { notes.Add(n); }
+            triad = GetMinorTriad((int)StandardNotes._C, 1); foreach (int n in triad) { notes.Add(n); }
+
+            
+            
+
+            return notes;
+        }
+
+        public List<int> GetSong()
+        {
+            List<int> notes = new List<int>();
+
+            foreach (int n in GetMajorSequence()) { notes.Add(n); }
+            foreach (int n in GetMinorSequence()) { notes.Add(n); }
+            foreach (int n in GetMajorSequence()) { notes.Add(n); }
+
+            return notes;
+
+        }
+
+        public string GetAudioFileName(int note, bool randomiseOctave)
         {
             string fileToPlay = "";
+            int octave = Numbers.GetNextRandom(1, 7);
             
-            switch(note)
+            if (!randomiseOctave)
+            {
+                octave = 3;
+            }
+
+            if (SoundSource == (int)SoundSources.ToyPiano)
+            {
+                octave = 1;
+            }
+
+            switch (note)
             {
                 case (int)Notes.ShortA:
                 case (int)Notes.MidA:
                 case (int)Notes.LongA:
-                    fileToPlay = "A3.mp3";
+                    fileToPlay = "A"+ octave + ".mp3";
                     break;
                 case (int)Notes.ShortASharp:
                 case (int)Notes.MidASharp:
                 case (int)Notes.LongASharp:
-                    fileToPlay = "Bb3.mp3";
+                    fileToPlay = "Bb" + octave + ".mp3";
                     break;
                 case (int)Notes.ShortB:
                 case (int)Notes.MidB:
                 case (int)Notes.LongB:
-                    fileToPlay = "B3.mp3";
+                    fileToPlay = "B" + octave + ".mp3";
                     break;
                 case (int)Notes.ShortC:
                 case (int)Notes.MidC:
                 case (int)Notes.LongC:
-                    fileToPlay = "C3.mp3";
+                    fileToPlay = "C" + octave + ".mp3";
                     break;
                 case (int)Notes.ShortCSharp:
                 case (int)Notes.MidCSharp:
                 case (int)Notes.LongCSharp:
-                    fileToPlay = "Db3.mp3";
+                    fileToPlay = "Db" + octave + ".mp3";
                     break;
                 case (int)Notes.ShortD:
                 case (int)Notes.MidD:
                 case (int)Notes.LongD:
-                    fileToPlay = "D3.mp3";
+                    fileToPlay = "D" + octave + ".mp3";
                     break;
                 case (int)Notes.ShortDSharp:
                 case (int)Notes.MidDSharp:
                 case (int)Notes.LongDSharp:
-                    fileToPlay = "Eb3.mp3";
+                    fileToPlay = "Eb" + octave + ".mp3";
                     break;
                 case (int)Notes.ShortE:
                 case (int)Notes.MidE:
                 case (int)Notes.LongE:
-                    fileToPlay = "E3.mp3";
+                    fileToPlay = "E" + octave + ".mp3";
                     break;
                 case (int)Notes.ShortF:
                 case (int)Notes.MidF:
                 case (int)Notes.LongF:
-                    fileToPlay = "F3.mp3";
+                    fileToPlay = "F" + octave + ".mp3";
                     break;
                 case (int)Notes.ShortFSharp:
                 case (int)Notes.MidFSharp:
                 case (int)Notes.LongFSharp:
-                    fileToPlay = "Gb3.mp3";
+                    fileToPlay = "Gb" + octave + ".mp3";
                     break;
                 case (int)Notes.ShortG:
                 case (int)Notes.MidG:
                 case (int)Notes.LongG:
-                    fileToPlay = "G3.mp3";
+                    fileToPlay = "G" + octave + ".mp3";
                     break;
                 case (int)Notes.ShortGSharp:
                 case (int)Notes.MidGSharp:
                 case (int)Notes.LongGSharp:
-                    fileToPlay = "Ab3.mp3";
+                    fileToPlay = "Ab" + octave + ".mp3";
                     break;
 
             }
 
-            fileToPlay = NoteDictionary[note] + ".mp3";
+            if (SoundSource == (int)SoundSources.ToyPiano)
+            {
+                fileToPlay = NoteDictionary[note] + ".mp3";
+            }
+
+            if (SoundSource == (int)SoundSources.Noise)
+            {
+                string noiseType = "n";
+
+                if (Numbers.GetNextRandom(100) > 50)
+                {
+                    noiseType = "ma";
+                }
+                fileToPlay = noiseType + Numbers.GetNextRandom(9) + ".mp3";
+            }
+
             Console.WriteLine("Playing: " + fileToPlay);
+
+
+
+
             return fileToPlay;
         }
 
-
-        public void PlayNote(int note)
+        public bool IsPlaying()
         {
+            return AudioPlayer.IsPlaying;
+        }
+
+        public void PlayMelodyNote(int note)
+        {
+            if (AudioPlayer.IsPlaying)
+            {
+                return;
+            }
+
             //play note notes[note]
             if (note >= NoteDictionary.Count)
             {
@@ -252,7 +386,33 @@ namespace Darkaudious.Helpers
             try
             {
                 //AudioPlayer.Volume = volume;
-                AudioPlayer.Load(GetAudioFileName(note));
+                AudioPlayer.Load(NoteDictionary[note] + ".mp3");
+                AudioPlayer.Play();
+            }
+            catch (Exception e)
+            {
+
+            }
+        }
+
+        public void PlayNote(int note, bool randomiseOctave)
+        {
+            if (AudioPlayer.IsPlaying)
+            {
+                return;
+            }
+
+            //play note notes[note]
+            if (note >= NoteDictionary.Count)
+            {
+                note = NoteDictionary.Count - 1;
+            }
+            Console.WriteLine("Play: " + NoteDictionary[note]);
+
+            try
+            {
+                //AudioPlayer.Volume = volume;
+                AudioPlayer.Load(GetAudioFileName(note, randomiseOctave));
                 AudioPlayer.Play();
             }
             catch (Exception e)
@@ -262,13 +422,15 @@ namespace Darkaudious.Helpers
 
         }
 
-        public void PlayNote(int length, int note)
+       
+
+        public void PlayNote(int length, int note, bool randomiseOctave)
         {
             if (note >= NoteDictionary.Count)
             {
                 note = NoteDictionary.Count - 1;
             }
-            PlayNote(GetNote(length, note));
+            PlayNote(GetNote(length, note), randomiseOctave);
         }
 
         public int GetNote(int length, int note)
@@ -522,7 +684,159 @@ namespace Darkaudious.Helpers
             return new int[] { Numbers.GetNextRandom(0, 11), Numbers.GetNextRandom(0, 11), Numbers.GetNextRandom(0, 11) };
         }
 
-        public int [] GetRandonTriad()
+
+        public static int [] TwinkleMajor = new int[] // twinkle major
+        {
+                (int)Notes.ShortC, (int)Notes.ShortC, (int)Notes.ShortG, (int)Notes.ShortG, (int)Notes.ShortA, (int)Notes.ShortA, (int)Notes.LongG,
+                (int)Notes.ShortF, (int)Notes.ShortF, (int)Notes.ShortE, (int)Notes.ShortE, (int)Notes.ShortD, (int)Notes.ShortD, (int)Notes.LongC,
+        };
+
+        public static int[] TwinkleMinor = new int[] // twinkle minor
+        {
+                (int)Notes.ShortC, (int)Notes.ShortC, (int)Notes.ShortG, (int)Notes.ShortG, (int)Notes.ShortGSharp, (int)Notes.ShortGSharp, (int)Notes.LongG,
+                (int)Notes.ShortF, (int)Notes.ShortF, (int)Notes.ShortDSharp, (int)Notes.ShortDSharp, (int)Notes.ShortD, (int)Notes.ShortD, (int)Notes.LongC,
+        };
+
+        public static int[] DarkTheme1 = new int[] // dark theme
+        {
+               (int)Notes.LongB, (int)Notes.ShortG, (int)Notes.ShortFSharp, (int)Notes.LongE
+        };
+
+        public static int[] DarkTheme2 = new int[] // dark theme
+        {
+                (int)Notes.LongC, (int)Notes.ShortG, (int)Notes.ShortFSharp, (int)Notes.LongE
+        };
+
+        public static int[] DarkTheme3 = new int[] // dark theme
+        {
+                (int)Notes.LongE, (int)Notes.ShortG, (int)Notes.ShortFSharp, (int)Notes.LongE
+        };
+
+
+        public static int[] SessionMelody1 = null;
+        public static int[] SessionMelody2 = null;
+        public static int[] SessionMelody3 = null;
+        public static int[] SessionMelody4 = null;
+
+        public void PopulateSessionMelodys()
+        {
+            if (SessionMelody1 == null)
+            {
+                SessionMelody1 = new int[Numbers.GetNextRandom(3, 7)];
+
+                for (int i = 0; i < SessionMelody1.Length; i++)
+                {
+                    SessionMelody1[i] = Numbers.GetNextRandom(0, 35);
+                }
+            }
+
+            if (SessionMelody2 == null)
+            {
+                SessionMelody2 = new int[Numbers.GetNextRandom(4, 7)];
+
+                for (int i = 0; i < SessionMelody2.Length; i++)
+                {
+                    SessionMelody2[i] = Numbers.GetNextRandom(0, 35);
+                }
+            }
+
+            if (SessionMelody3 == null)
+            {
+                SessionMelody3 = new int[Numbers.GetNextRandom(4, 8)];
+
+                for (int i = 0; i < SessionMelody3.Length; i++)
+                {
+                    SessionMelody3[i] = Numbers.GetNextRandom(0, 35);
+                }
+            }
+
+            if (SessionMelody4 == null)
+            {
+                SessionMelody4 = new int[Numbers.GetNextRandom(5, 10)];
+
+                for (int i = 0; i < SessionMelody4.Length; i++)
+                {
+                    SessionMelody4[i] = Numbers.GetNextRandom(0, 35);
+                }
+            }
+
+            Console.WriteLine("Session Tunes Created");
+
+        }
+
+        public int[] GetSessionMelody(int num)
+        {
+            if (SessionMelody1 == null)
+            {
+                PopulateSessionMelodys();
+            }
+
+            int[] sessionMelody = SessionMelody1;
+
+            switch (num)
+            {
+                case 0:
+                    sessionMelody = SessionMelody1;
+                    break;
+                case 1:
+                    sessionMelody = SessionMelody1;
+                    break;
+                case 2:
+                    sessionMelody = SessionMelody2;
+                    break;
+                case 3:
+                    sessionMelody = SessionMelody3;
+                    break;
+                case 4:
+                    sessionMelody = SessionMelody4;
+                    break;
+                default:
+                    sessionMelody = SessionMelody4;
+                    break;
+            }
+
+            return sessionMelody;
+        }
+
+        public int [] GetSessionMelody()
+        {
+            return GetSessionMelody(Numbers.GetNextRandom(0, 3));
+        }
+
+        public int[] GetSignatureMelody()
+        {
+            int r = Numbers.GetNextRandom(1, 3);
+
+            if (Numbers.GetNextRandom(1, 1000) > 990)
+            {
+                if (Numbers.GetNextRandom(1, 1000) > 500)
+                {
+                    return TwinkleMajor;
+                }
+
+                if (Numbers.GetNextRandom(1, 1000) > 10)
+                {
+                    return TwinkleMinor;
+                }
+            }
+
+            if (r == 1) { return DarkTheme1; }
+            else if (r == 2) { return DarkTheme2; }
+
+            return DarkTheme3;
+        }
+
+        public int[] GetMinorTune()
+        {
+            return TwinkleMinor;
+        }
+
+        public int[] GetMajorTune()
+        {
+            return TwinkleMajor;
+        }
+
+        public int [] GetRandomTriad()
         {
             int[] notes = null;
             int triadType = Numbers.GetNextRandom(0, 3); // major, minor, dischordant, random

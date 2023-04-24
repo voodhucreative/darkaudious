@@ -39,7 +39,7 @@ namespace Darkaudious.iOS
         {
             // Check for new data, and display it
 
-            _app.SayAwake();
+            //_app.SayAwake();
             // Inform system of fetch results
             completionHandler(UIBackgroundFetchResult.NewData);
         }

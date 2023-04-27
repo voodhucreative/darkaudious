@@ -311,6 +311,7 @@ namespace Darkaudious.Helpers
         string[] SessionPhrase3 = { };
         string[] SessionPhrase4 = { };
 
+        List<string> Repeatables;
 
         public PhraseManager()
         {
@@ -337,6 +338,43 @@ namespace Darkaudious.Helpers
             }
             return ProcessPhraseEmphasis(DefaultPhrase);
             //return ProcessPhraseEmphasis(DemoPhrases);
+        }
+
+        public string GetReversePhrase()
+        {
+            return ReverseString(GetDemoPhrase());
+        }
+
+        public string ReverseArrayToString(string[] text)
+        {
+            string reversed = "";
+            foreach(string s in ReverseArrayToArray(text))
+            {
+                reversed += s + " ";
+            }
+            return reversed;
+        }
+
+        public string [] ReverseArrayToArray(string [] text)
+        {
+            if (text == null) return null;
+
+            string[] reversed = new string[text.Length];
+
+            for(int i=0; i<reversed.Length; i++)
+            {
+                reversed[i] = ReverseString(text[reversed.Length-(1+i)]);
+            }
+            return reversed;
+        }
+
+        public string ReverseString(string text)
+        {
+            if (text == null) return null;
+
+            char[] array = text.ToCharArray();
+            Array.Reverse(array);
+            return new String(array);
         }
 
         public string[] GetSessionPhrase(int num)
@@ -477,10 +515,10 @@ namespace Darkaudious.Helpers
             }
             Console.WriteLine("-------- END UNIQUE KEYS --------");
 
-            SessionPhrase1 = new string[Numbers.GetNextRandom(2, 5)];
-            SessionPhrase2 = new string[Numbers.GetNextRandom(2, 5)];
-            SessionPhrase3 = new string[Numbers.GetNextRandom(2, 5)];
-            SessionPhrase4 = new string[Numbers.GetNextRandom(2, 5)];
+            SessionPhrase1 = new string[Numbers.GetNextRandom(2, 3)];
+            SessionPhrase2 = new string[Numbers.GetNextRandom(2, 3)];
+            SessionPhrase3 = new string[Numbers.GetNextRandom(2, 3)];
+            SessionPhrase4 = new string[Numbers.GetNextRandom(2, 3)];
 
             for (int i=0; i<SessionPhrase1.Length; i++)
             {
@@ -498,8 +536,32 @@ namespace Darkaudious.Helpers
             {
                 SessionPhrase4[i] = SessionDictionary[Numbers.GetNextRandom(1, SessionDictionary.Count-1)];
             }
+
+            if (Numbers.GetNextRandom(0, 100) > 25)
+            {
+                SessionPhrase1[1] = GetSourceEntity();
+            }
+
+            if (Numbers.GetNextRandom(0, 100) > 25)
+            {
+                SessionPhrase2[1] = GetSourceEntity();
+            }
+
+            if (Numbers.GetNextRandom(0, 100) > 25)
+            {
+                SessionPhrase3[1] = GetSourceEntity();
+            }
+
+            if (Numbers.GetNextRandom(0, 100) > 25)
+            {
+                SessionPhrase4[1] = GetSourceEntity();
+            }
+            
+
+
             Console.WriteLine("-------- END SESSION KEYS --------");
 
+            PopulateRepeatables();
         }
 
         public string GetSessionPhrases()
@@ -511,11 +573,24 @@ namespace Darkaudious.Helpers
             return sessionPhrases;
         }
 
+        public void PopulateRepeatables()
+        {
+            Repeatables = new List<string>();
+            int numberOfRepeatables = 10;
+
+            for (int i = 0; i < numberOfRepeatables; i++)
+            {
+                Repeatables.Add(SessionDictionary[Numbers.GetNextRandom(0, SessionDictionary.Count - 1)]);
+            }
+            Console.WriteLine("-------- REPEATABLES POPULATED --------");
+        }
+
         public List<string> PopulateDictionary()
         {
             List<string> dictionary = new List<string>();
 
             UniqueKeys = new List<int>();
+       
 
             var assembly = typeof(App).GetTypeInfo().Assembly;
             foreach (var res in assembly.GetManifestResourceNames())
@@ -543,6 +618,8 @@ namespace Darkaudious.Helpers
                 dictionary.Add("Trapped");
             }
 
+            
+
             return dictionary;
         }
 
@@ -554,7 +631,11 @@ namespace Darkaudious.Helpers
 
         public string GetMuttering()
         {
-            return Mutterings[Numbers.GetNextRandom(0, Mutterings.Length - 1)].ToLower(); 
+            if (Numbers.GetNextRandom(0, 100) > 75)
+            {
+                return Mutterings[Numbers.GetNextRandom(0, Mutterings.Length - 1)].ToLower();
+            }
+            return Repeatables[Numbers.GetNextRandom(0, Repeatables.Count - 1)].ToLower();
         }
 
         public string GetDemoPhrase()

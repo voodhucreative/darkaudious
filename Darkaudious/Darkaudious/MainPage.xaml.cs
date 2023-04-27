@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -28,6 +29,7 @@ namespace Darkaudious
 
 
         Label CurrentWord;
+        Label SeekingWord;
         Label ThinkingIndicator;
         Label ScanSpeedLabel;
         Label SpiritStrengthLabel;
@@ -64,6 +66,8 @@ namespace Darkaudious
         StoppableTimer LogoAnimTimer;
 
         StoppableTimer AudioTimer;
+        StoppableTimer WordFadeTimer;
+        StoppableTimer ActivityTimer;
 
         bool PerformingEvent;
 
@@ -160,7 +164,10 @@ namespace Darkaudious
         int MelodyFrequency = 500;
         int RandomiseFrequency = 500;
         int MelodyCount = 0;
+        int LastPlayedMelody;
+        int LastInstrumentPlayed;
 
+        int Mood = 0;
 
 
         public enum DarkaudiousEvents
@@ -247,6 +254,8 @@ namespace Darkaudious
         int MoveY = 0;
         int MoveZ = 0;
 
+        bool SpiritTriggeredMelody;
+
         public string[] Moods =
         {
             "FURIOUS",
@@ -315,11 +324,18 @@ namespace Darkaudious
         Label Phrase3;
         Label Phrase4;
 
+        EntityManager EntityManager;
+
+        Label PianoSelect;
+        Label ToySelect;
+        Label ToneSelect;
 
 
         public MainPage()
         {
             CurrentEvent = (int)DarkaudiousEvents.DarkaudiousLoad;
+
+            EntityManager = new EntityManager();
 
             PhraseManager = new PhraseManager();
             PhraseManager.PopulateDictionary();
@@ -328,6 +344,12 @@ namespace Darkaudious
             {
                 UseMockLocation = true;
             }
+
+            SpiritTriggeredMelody = false;
+            LastPlayedMelody = 0;
+            LastInstrumentPlayed = (int)SoundSources.Piano;
+
+            Mood = 0; // major
 
             selectedInstrument = (int)SoundSources.Piano;
 
@@ -472,7 +494,7 @@ namespace Darkaudious
                 Source = "carbonbg_head3.png",
                 //Source = "background2.png",
                 WidthRequest = Units.ScreenWidth,
-                HeightRequest = Units.ScreenUnitL * 5.5,
+                HeightRequest = Units.ScreenUnitL * 8,
                 //HeightRequest = 120,
                 Aspect = Aspect.Fill,
                 HorizontalOptions = LayoutOptions.CenterAndExpand,
@@ -513,8 +535,6 @@ namespace Darkaudious
                 HorizontalOptions = LayoutOptions.CenterAndExpand,
                 VerticalOptions = LayoutOptions.EndAndExpand
             };
-
-
 
             LeftStrip = new Image
             {
@@ -752,13 +772,13 @@ namespace Darkaudious
 
             PowerImage = new Image
             {
-                Source = "switchOff.png",//"power2off.png",
-                WidthRequest = 80,
-                HeightRequest = 80,
+                Source = "power_off.png",//"power2off.png",
+                WidthRequest = 52,
+                HeightRequest = 52,
                 Aspect = Aspect.AspectFit,
                 HorizontalOptions = LayoutOptions.CenterAndExpand,
                 VerticalOptions = LayoutOptions.EndAndExpand,
-                Margin = 8
+                Margin = new Thickness(24, 8)
             };
 
             StartStopImage = new Image
@@ -775,24 +795,25 @@ namespace Darkaudious
             HistoryImage = new Image
             {
                 //Source = "historybtn.png",
-                Source = "copypaste.png",
-                WidthRequest = Units.ScreenUnitM * 2,
-                HeightRequest = Units.ScreenUnitM * 2,
+                Source = "copy_off.png",
+                WidthRequest = 48,
+                HeightRequest = 48,
                 Aspect = Aspect.AspectFit,
                 HorizontalOptions = LayoutOptions.CenterAndExpand,
                 VerticalOptions = LayoutOptions.EndAndExpand,
-                Margin = 8
+                Margin = new Thickness(24, 8)
             };
 
             InfoImage = new Image
             {
                 //Source = "historybtn.png",
-                Source = "info.png",
-                WidthRequest = Units.ScreenUnitL,
+                Source = "info_off.png",
+                WidthRequest = 48,
+                HeightRequest = 48,
+                Aspect = Aspect.AspectFit,
                 HorizontalOptions = LayoutOptions.CenterAndExpand,
-                VerticalOptions = LayoutOptions.StartAndExpand,
-                Margin = new Thickness(0, 0, Units.ScreenUnitM, Units.ScreenUnitM),
-                Opacity = 0.25f
+                VerticalOptions = LayoutOptions.EndAndExpand,
+                Margin = new Thickness(24, 8)
             };
 
             ClearImage = new Image
@@ -928,7 +949,6 @@ namespace Darkaudious
                  {
                      Command = new Command(() =>
                      {
-
                          if (DeadboxOn)
                          {
                              PlaySound("click");
@@ -942,8 +962,8 @@ namespace Darkaudious
             // SET 1
             Tune1 = new Label
             {
-                Text = "EAR 1",
-                FontSize = Units.DynamicFontSizeXL,
+                Text = "TUNE\nONE",
+                FontSize = Units.FontSizeM,
                 FontFamily = Fonts.GetBoldAppFont(),
                 TextColor = Color.FromHex("ffffff"),
                 Opacity = 1.0f,
@@ -960,10 +980,8 @@ namespace Darkaudious
                       {
                           if (DeadboxOn)
                           {
-                              IsSpeaking = false;
-                              playSignatureMelody = true;
-                              SignatureMelody = AudioManager.GetSessionMelody(1);
-                              MelodyCount = 0;
+                              TriggerMelody(1, selectedInstrument, false);
+                              
                           }
                       })
                  }
@@ -971,8 +989,8 @@ namespace Darkaudious
 
             Phrase1 = new Label
             {
-                Text = "SAY 1",
-                FontSize = Units.DynamicFontSizeXL,
+                Text = "MAJOR\nVIBES",
+                FontSize = Units.FontSizeM,
                 FontFamily = Fonts.GetBoldAppFont(),
                 TextColor = Color.FromHex("ffffff"),
                 Opacity = 1.0f,
@@ -989,10 +1007,8 @@ namespace Darkaudious
                      {
                          if (DeadboxOn)
                          {
-                             IsSpeaking = true;
-                             playSignatureMelody = true;
-                             WordsToSpeak = PhraseManager.GetSessionPhrase(1);
-                             MelodyCount = 0;
+                             SetMood(0);
+                             TriggerPhrase(1, false);
                          }
                      })
                  }
@@ -1001,8 +1017,8 @@ namespace Darkaudious
             // SET 2
             Tune2 = new Label
             {
-                Text = "EAR 2",
-                FontSize = Units.DynamicFontSizeXL,
+                Text = "TUNE\nTWO",
+                FontSize = Units.FontSizeM,
                 FontFamily = Fonts.GetBoldAppFont(),
                 TextColor = Color.FromHex("ffffff"),
                 Opacity = 1.0f,
@@ -1019,10 +1035,7 @@ namespace Darkaudious
                      {
                          if (DeadboxOn)
                          {
-                             IsSpeaking = false;
-                             playSignatureMelody = true;
-                             SignatureMelody = AudioManager.GetSessionMelody(2);
-                             MelodyCount = 0;
+                             TriggerMelody(2, selectedInstrument, false);
                          }
                      })
                  }
@@ -1030,8 +1043,8 @@ namespace Darkaudious
 
             Phrase2 = new Label
             {
-                Text = "SAY 2",
-                FontSize = Units.DynamicFontSizeXL,
+                Text = "MINOR\nVIBES",
+                FontSize = Units.FontSizeM,
                 FontFamily = Fonts.GetBoldAppFont(),
                 TextColor = Color.FromHex("ffffff"),
                 Opacity = 1.0f,
@@ -1048,10 +1061,8 @@ namespace Darkaudious
                      {
                          if (DeadboxOn)
                          {
-                             IsSpeaking = true;
-                             playSignatureMelody = true;
-                             WordsToSpeak = PhraseManager.GetSessionPhrase(2);
-                             MelodyCount = 0;
+                             SetMood(1);
+                             TriggerPhrase(2, false);
                          }
                      })
                  }
@@ -1060,8 +1071,8 @@ namespace Darkaudious
             // SET 3
             Tune3 = new Label
             {
-                Text = "EAR 3",
-                FontSize = Units.DynamicFontSizeXL,
+                Text = "TUNE\nTHREE",
+                FontSize = Units.FontSizeM,
                 FontFamily = Fonts.GetBoldAppFont(),
                 TextColor = Color.FromHex("ffffff"),
                 Opacity = 1.0f,
@@ -1078,10 +1089,7 @@ namespace Darkaudious
                      {
                          if (DeadboxOn)
                          {
-                             IsSpeaking = false;
-                             playSignatureMelody = true;
-                             SignatureMelody = AudioManager.GetSessionMelody(3);
-                             MelodyCount = 0;
+                             TriggerMelody(3, selectedInstrument, false);
                          }
                      })
                  }
@@ -1089,8 +1097,8 @@ namespace Darkaudious
 
             Phrase3 = new Label
             {
-                Text = "SAY 3",
-                FontSize = Units.DynamicFontSizeXL,
+                Text = "RANDOM\nVIBES",
+                FontSize = Units.FontSizeM,
                 FontFamily = Fonts.GetBoldAppFont(),
                 TextColor = Color.FromHex("ffffff"),
                 Opacity = 1.0f,
@@ -1107,10 +1115,8 @@ namespace Darkaudious
                      {
                          if (DeadboxOn)
                          {
-                             IsSpeaking = true;
-                             playSignatureMelody = true;
-                             WordsToSpeak = PhraseManager.GetSessionPhrase(3);
-                             MelodyCount = 0;
+                             SetMood(2);
+                             TriggerPhrase(3, false);
                          }
                      })
                  }
@@ -1119,8 +1125,8 @@ namespace Darkaudious
             // SET 4
             Tune4 = new Label
             {
-                Text = "EAR 4",
-                FontSize = Units.DynamicFontSizeXL,
+                Text = "TUNE\nFOUR",
+                FontSize = Units.FontSizeM,
                 FontFamily = Fonts.GetBoldAppFont(),
                 TextColor = Color.FromHex("ffffff"),
                 Opacity = 1.0f,
@@ -1137,10 +1143,7 @@ namespace Darkaudious
                      {
                          if (DeadboxOn)
                          {
-                             IsSpeaking = false;
-                             playSignatureMelody = true;
-                             SignatureMelody = AudioManager.GetSessionMelody(4);
-                             MelodyCount = 0;
+                             TriggerMelody(4, selectedInstrument, false);
                          }
                      })
                  }
@@ -1148,8 +1151,8 @@ namespace Darkaudious
 
             Phrase4 = new Label
             {
-                Text = "SAY 4",
-                FontSize = Units.DynamicFontSizeXL,
+                Text = "SESSION\nVIBES",
+                FontSize = Units.FontSizeM,
                 FontFamily = Fonts.GetBoldAppFont(),
                 TextColor = Color.FromHex("ffffff"),
                 Opacity = 1.0f,
@@ -1166,10 +1169,8 @@ namespace Darkaudious
                      {
                          if (DeadboxOn)
                          {
-                             IsSpeaking = true;
-                             playSignatureMelody = true;
-                             WordsToSpeak = PhraseManager.GetSessionPhrase(4);
-                             MelodyCount = 0;
+                             SetMood(3);
+                             TriggerPhrase(4, false);
                          }
                      })
                  }
@@ -1219,10 +1220,109 @@ namespace Darkaudious
 
                              //MelodyCount = 0;
 
+                             IsSpeaking = false;
+                             playSignatureMelody = true;
+                             selectedInstrument = (int)SoundSources.Noise;
+                             SignatureMelody = AudioManager.GetSpooky();
+                             MelodyCount = 0;
+                             
+
                          }
                      })
                  }
              );
+
+            PianoSelect = new Label
+            {
+                Text = "PIANO",
+                FontSize = Units.DynamicFontSizeXL,
+                FontFamily = Fonts.GetBoldAppFont(),
+                TextColor = Color.FromHex("ffffff"),
+                Opacity = 1.0f,
+                HorizontalOptions = LayoutOptions.Center,
+                HorizontalTextAlignment = TextAlignment.Center,
+                VerticalOptions = LayoutOptions.StartAndExpand,
+                VerticalTextAlignment = TextAlignment.Start
+            };
+
+            PianoSelect.GestureRecognizers.Add(
+                 new TapGestureRecognizer()
+                 {
+                     Command = new Command(() =>
+                     {
+
+                         if (DeadboxOn)
+                         {
+                             selectedInstrument = (int)SoundSources.Piano;
+                             PianoSelect.Opacity = 1.0f;
+                             ToySelect.Opacity = 0.5f;
+                             ToneSelect.Opacity = 0.5f;
+
+                         }
+                     })
+                 }
+             );
+
+            ToySelect = new Label
+            {
+                Text = "TOY",
+                FontSize = Units.DynamicFontSizeXL,
+                FontFamily = Fonts.GetBoldAppFont(),
+                TextColor = Color.FromHex("ffffff"),
+                Opacity = 1.0f,
+                HorizontalOptions = LayoutOptions.Center,
+                HorizontalTextAlignment = TextAlignment.Center,
+                VerticalOptions = LayoutOptions.StartAndExpand,
+                VerticalTextAlignment = TextAlignment.Start
+            };
+
+            ToySelect.GestureRecognizers.Add(
+                 new TapGestureRecognizer()
+                 {
+                     Command = new Command(() =>
+                     {
+
+                         if (DeadboxOn)
+                         {
+                             selectedInstrument = (int)SoundSources.ToyPiano;
+                             PianoSelect.Opacity = 0.5f;
+                             ToySelect.Opacity = 1.0f;
+                             ToneSelect.Opacity = 0.5f;
+                         }
+                     })
+                 }
+             );
+
+            ToneSelect = new Label
+            {
+                Text = "TONE",
+                FontSize = Units.DynamicFontSizeXL,
+                FontFamily = Fonts.GetBoldAppFont(),
+                TextColor = Color.FromHex("ffffff"),
+                Opacity = 1.0f,
+                HorizontalOptions = LayoutOptions.Center,
+                HorizontalTextAlignment = TextAlignment.Center,
+                VerticalOptions = LayoutOptions.StartAndExpand,
+                VerticalTextAlignment = TextAlignment.Start
+            };
+
+            ToneSelect.GestureRecognizers.Add(
+                 new TapGestureRecognizer()
+                 {
+                     Command = new Command(() =>
+                     {
+
+                         if (DeadboxOn)
+                         {
+                             selectedInstrument = (int)SoundSources.Tone;
+                             PianoSelect.Opacity = 0.5f;
+                             ToySelect.Opacity = 0.5f;
+                             ToneSelect.Opacity = 1.0f;
+                         }
+                     })
+                 }
+             );
+
 
             GrandPiano = new Label
             {
@@ -1233,8 +1333,8 @@ namespace Darkaudious
                 Opacity = 1.0f,
                 HorizontalOptions = LayoutOptions.Center,
                 HorizontalTextAlignment = TextAlignment.Center,
-                VerticalOptions = LayoutOptions.EndAndExpand,
-                VerticalTextAlignment = TextAlignment.End
+                VerticalOptions = LayoutOptions.CenterAndExpand,
+                VerticalTextAlignment = TextAlignment.Center
             };
 
             GrandPiano.GestureRecognizers.Add(
@@ -1245,10 +1345,16 @@ namespace Darkaudious
 
                          if (DeadboxOn)
                          {
-                             selectedInstrument = (int)SoundSources.Noise;
-                             AudioManager.SetInstrument(selectedInstrument);
-                             AudioManager.SetSoundSource(selectedInstrument);
-                             TriggerRapidEvents();
+                             //selectedInstrument = (int)SoundSources.Noise;
+                             //AudioManager.SetInstrument(selectedInstrument);
+                             //AudioManager.SetSoundSource(selectedInstrument);
+                             //TriggerRapidEvents();
+
+                             IsSpeaking = false;
+                             playSignatureMelody = true;
+                             selectedInstrument = (int)SoundSources.Piano;
+                             SignatureMelody = AudioManager.GetMinorTune();
+                             MelodyCount = 0;
                          }
                      })
                  }
@@ -1266,7 +1372,22 @@ namespace Darkaudious
                 VerticalOptions = LayoutOptions.Center,
                 VerticalTextAlignment = TextAlignment.Center,
                 HeightRequest = Units.ScreenHeight,
-                Margin = new Thickness(0, 80, 0, 0)
+                Margin = new Thickness(0, 140, 0, 0)
+            };
+
+            SeekingWord = new Label
+            {
+                Text = "",
+                FontSize = Units.DynamicFontSizeXXXL,
+                FontFamily = Fonts.GetBoldAppFont(),
+                TextColor = Color.FromHex("fbb515"),
+                Opacity = 0.5f,
+                HorizontalOptions = LayoutOptions.Center,
+                HorizontalTextAlignment = TextAlignment.Center,
+                VerticalOptions = LayoutOptions.Center,
+                VerticalTextAlignment = TextAlignment.Center,
+                HeightRequest = Units.ScreenHeight,
+                Margin = new Thickness(0, 140, 0, 0)
             };
 
             WordHistory = new Label
@@ -1285,11 +1406,10 @@ namespace Darkaudious
             ThinkingIndicator = new Label
             {
                 Text = "",
-                FontSize = Units.DynamicFontSizeM,
+                FontSize = Units.DynamicFontSizeL,
                 FontFamily = Fonts.GetBoldAppFont(),
                 TextColor = Color.White,//FromHex("86eb2e"),
                 Opacity = 0.5,
-                Margin = new Thickness(0, 0, 0, 0),
                 HorizontalOptions = LayoutOptions.Center,
                 HorizontalTextAlignment = TextAlignment.Center,
                 VerticalOptions = LayoutOptions.End,
@@ -1528,15 +1648,24 @@ namespace Darkaudious
                  }
              );
 
+            Grid WordGrid = new Grid { };
+
+            WordGrid.Children.Add(CurrentWord, 0, 0);
+            WordGrid.Children.Add(SeekingWord, 0, 0);
+
             StackLayout ContentContainer = new StackLayout
             {
                 Orientation = StackOrientation.Vertical,
-
+                
                 Padding = new Thickness(0, 16),
                 Children =
                 {
                     //ControlsLayout,
-                    CurrentWord,
+                    WordGrid,
+                    new Grid
+                    {
+
+                    },
                     new StackLayout
                     {
                         Orientation = StackOrientation.Horizontal,
@@ -1596,10 +1725,28 @@ namespace Darkaudious
                 HeightRequest = Units.QuarterScreenHeight
             };
 
-            TopControlsGrid.Children.Add(PianoKeysImage, 0, 0);
-            
+            //TopControlsGrid.Children.Add(PianoKeysImage, 0, 0);
 
-            Grid.SetColumnSpan(PianoKeysImage, 2);
+            StackLayout sourceControl = new StackLayout
+            {
+                Orientation = StackOrientation.Horizontal,
+                HorizontalOptions = LayoutOptions.CenterAndExpand,
+                WidthRequest = Units.ScreenWidth,
+                BackgroundColor = Color.Transparent,
+                HeightRequest = 120,
+                Padding = new Thickness(24, 0),
+                Children =
+                {
+                    PianoSelect,
+                    ToySelect,
+                    ToneSelect
+                }
+            };
+
+            //TopControlsGrid.Children.Add(sourceControl);
+
+
+            //Grid.SetColumnSpan(sourceControl, 2);
             PageContent.Children.Add(TopControlsGrid, 0, 0);
 
 
@@ -1669,46 +1816,86 @@ namespace Darkaudious
                     //StartStopImage,
                     PowerImage,
                     HistoryImage,
+
+
+
                 }
             };
 
             StackLayout LeftControls = new StackLayout
             {
                 Orientation = StackOrientation.Vertical,
-                VerticalOptions = LayoutOptions.EndAndExpand,
-                //BackgroundColor = Color.Red,
-                Spacing = 16,
+                VerticalOptions = LayoutOptions.CenterAndExpand,
+                Spacing = Units.ScreenHeight10Percent,
+                Margin = new Thickness(0, Units.ScreenHeight10Percent),
                 Children =
                 {
-                    Phrase1,
-                    Phrase2,
-                    Phrase3,
-                    Phrase4,
-                    SoundButton,
-                    SpeechButton,
-                    VibrationButton
+                    new StackLayout
+                    {
+                        Orientation = StackOrientation.Vertical,
+                        VerticalOptions = LayoutOptions.StartAndExpand,
+                        Spacing = Units.ScreenHeight5Percent,
+                        Children =
+                        {
+                            Phrase1,
+                            Phrase2,
+                            Phrase3,
+                            Phrase4
+                        }
+                    },
+                    new StackLayout
+                    {
+                        Orientation = StackOrientation.Vertical,
+                        VerticalOptions = LayoutOptions.EndAndExpand,
+                        Spacing = Units.ScreenHeight5Percent,
+                        Children =
+                        {
+                            //HistoryImage
+                        }
+                    }
                 }
             };
 
             StackLayout RightControls = new StackLayout
             {
                 Orientation = StackOrientation.Vertical,
-                VerticalOptions = LayoutOptions.EndAndExpand,
-                //BackgroundColor = Color.Blue,
-                Spacing = 16,
+                VerticalOptions = LayoutOptions.CenterAndExpand,
+                Spacing = Units.ScreenHeight10Percent,
+                Margin = new Thickness(0, Units.ScreenHeight10Percent),
                 Children =
                 {
-                    //new Grid {WidthRequest = Units.ScreenWidth10Percent, HeightRequest = Units.ScreenWidth10Percent},
-                    Tune1,
-                    Tune2,
-                    Tune3,
-                    Tune4,
-                    InfoImage,
-                    MinusImage,
-                    PlusImage
+                    new StackLayout
+                    {
+                        Orientation = StackOrientation.Vertical,
+                        VerticalOptions = LayoutOptions.StartAndExpand,
+                        Spacing = Units.ScreenHeight5Percent,
+                        Children =
+                        {
+                            Tune1,
+                            Tune2,
+                            Tune3,
+                            Tune4
+                        }
+                    },
+                    new StackLayout
+                    {
+                        Orientation = StackOrientation.Vertical,
+                        VerticalOptions = LayoutOptions.EndAndExpand,
+                        Spacing = Units.ScreenHeight5Percent,
+                        Children =
+                        {
+                            //InfoImage 
+                        }
+                    }
                 }
             };
 
+            //ControlsGrid.Children.Add(sourceControl, 0, 4);
+            //Grid.SetColumnSpan(sourceControl, 5);
+
+            ControlsGrid.Children.Add(PianoSelect, 1, 4);
+            ControlsGrid.Children.Add(ToySelect, 2, 4);
+            ControlsGrid.Children.Add(ToneSelect, 3, 4);
             ControlsGrid.Children.Add(LeftControls, 0, 4);
             ControlsGrid.Children.Add(RightControls, 4, 4);
 
@@ -1717,42 +1904,43 @@ namespace Darkaudious
 
             //ControlsGrid.Children.Add(ClearImage, 0, 11);
             //ControlsGrid.Children.Add(StartStopImage, 2, 11);
-            ControlsGrid.Children.Add(GrandPiano, 0, 12);        
+            //ControlsGrid.Children.Add(GrandPiano, 0, 12);        
+            //ControlsGrid.Children.Add(PowerImage, 1, 12);
+            //ControlsGrid.Children.Add(ToyPiano, 2, 12);
+
+            ControlsGrid.Children.Add(InfoImage, 0, 12);
             ControlsGrid.Children.Add(PowerImage, 1, 12);
-            ControlsGrid.Children.Add(ToyPiano, 2, 12);
+            ControlsGrid.Children.Add(HistoryImage, 2, 12);
+
+
+
+
+            Grid.SetRowSpan(PowerImage, 3);
+            Grid.SetColumnSpan(PowerImage, 3);
+
+            Grid.SetRowSpan(InfoImage, 3);
+            Grid.SetColumnSpan(InfoImage, 3);
+
+            Grid.SetRowSpan(HistoryImage, 3);
+            Grid.SetColumnSpan(HistoryImage, 3);
+
 
             //ControlsGrid.Children.Add(HistoryImage, 3, 11);
 
 
             //Grid.SetRowSpan(ClearImage, 2);
             //Grid.SetRowSpan(StartStopImage, 2);
-            Grid.SetRowSpan(GrandPiano, 3);
-            Grid.SetRowSpan(PowerImage, 3);
-            Grid.SetRowSpan(ToyPiano, 3);
-            Grid.SetColumnSpan(GrandPiano, 3);
-            Grid.SetColumnSpan(PowerImage, 3);
-            Grid.SetColumnSpan(ToyPiano, 3);
+            //Grid.SetRowSpan(GrandPiano, 3);
+            //Grid.SetRowSpan(PowerImage, 3);
+            //Grid.SetRowSpan(ToyPiano, 3);
+            //Grid.SetColumnSpan(GrandPiano, 3);
+            //Grid.SetColumnSpan(PowerImage, 3);
+            //Grid.SetColumnSpan(ToyPiano, 3);
 
             //Grid.SetRowSpan(HistoryImage, 2);
 
-
-
-
             Grid.SetRowSpan(LeftControls, 8);
             Grid.SetRowSpan(RightControls, 8);
-
-
-            ControlsGrid.GestureRecognizers.Add(
-                  new TapGestureRecognizer()
-                  {
-                      Command = new Command(() =>
-                      {
-
-                          //AudioManager.SetInstrument(0);
-                          AudioManager.PlayNote(0, Numbers.GetNextRandom(0, 8), true);
-                      })
-                  }
-              );
 
             PageContent.Children.Add(ControlsGrid, 0, 0);
 
@@ -1766,6 +1954,14 @@ namespace Darkaudious
             ScanTimer = new StoppableTimer(TimeSpan.FromMilliseconds(250), ScanUpdate, true);
 
             AudioTimer = new StoppableTimer(TimeSpan.FromMilliseconds(250), AudioUpdate, true);
+
+            ActivityTimer = new StoppableTimer(TimeSpan.FromSeconds(30), ActivityUpdate, true);
+            ActivityTimer.Start();
+
+            WordFadeTimer = new StoppableTimer(TimeSpan.FromMilliseconds(50), WordFadeUpdate, true);
+            WordFadeTimer.Start();
+
+
             AudioTimer.Start();
 
             Accelerometer.ReadingChanged += Accelerometer_ReadingChanged;
@@ -1778,57 +1974,35 @@ namespace Darkaudious
 
             try
             {
-                Device.BeginInvokeOnMainThread(() =>
+                if (!Accelerometer.IsMonitoring)
                 {
-                    //Accelerometer.Start(SensorSpeed.UI);
-                    //Settings.AccelerometerAvailable = true;
-                });
-            }
-            catch (FeatureNotSupportedException e)
-            {
-
-                Console.WriteLine("ERROR STARTING ACCELEROMETER ");
-            }
-
+                    Accelerometer.Start(SensorSpeed.UI);
+                    Settings.AccelerometerAvailable = true;
+                }
+            } catch (FeatureNotSupportedException e) { }
 
             try
             {
-                Device.BeginInvokeOnMainThread(() =>
+                if (!Magnetometer.IsMonitoring)
                 {
-                    //Magnetometer.Start(SensorSpeed.UI);
-                    //Settings.MagnetometerAvailable = true;
-                });
-            }
-            catch (FeatureNotSupportedException fnsEx)
-            {
-                // Feature not supported on device
-                Console.WriteLine("MAGNOMETER NOT SUPPORTED");
-            }
-            catch (Exception ex)
-            {
-                // Other error has occurred.
-                Console.WriteLine("ERROR STARTING MAGNOMETER ");
-            }
+                    Magnetometer.Start(SensorSpeed.UI);
+                    Settings.MagnetometerAvailable = true;
+                }
+            } catch (FeatureNotSupportedException e) { }
 
             try
             {
-                Device.BeginInvokeOnMainThread(() =>
+                if (!Barometer.IsMonitoring)
                 {
-                    //Barometer.Start(SensorSpeed.UI);
-                    //Settings.BarometerAvailable = true;
-                });
+                    Barometer.Start(SensorSpeed.UI);
+                    Settings.BarometerAvailable = true;
+                }
             }
-            catch (FeatureNotSupportedException fnsEx)
-            {
-                // Feature not supported on device
-                Console.WriteLine("BAROMETER NOT SUPPORTED");
-            }
-            catch (Exception ex)
-            {
-                // Other error has occurred.
-                Console.WriteLine("ERROR STARTING BAROMETER ");
-            }
+            catch (FeatureNotSupportedException e) { }
 
+            Console.WriteLine("ACCELEROMETER AVAILABLE: " + Settings.AccelerometerAvailable);
+            Console.WriteLine("BAROMETER AVAILABLE: " + Settings.BarometerAvailable);
+            Console.WriteLine("MAGNOMETER AVAILABLE: " + Settings.MagnetometerAvailable);
 
             StopEffect();
 
@@ -1939,7 +2113,7 @@ namespace Darkaudious
                 FooterBG.TranslateTo(0, (Units.ScreenUnitM * 2), 0, Easing.Linear);
                 CurrentWord.TranslateTo(0, 0, 0, Easing.Linear);
                 ThinkingIndicator.TranslateTo(0, (Units.ScreenUnitM), 0, Easing.Linear);
-                ThinkingIndicator.FontSize = Units.DynamicFontSizeM;
+                ThinkingIndicator.FontSize = Units.FontSizeM;
                 InvestigationLabel.FontSize = Units.DynamicFontSizeXL;
                 InvestigationLabel.Margin = new Thickness(0, Units.ScreenUnitS, 0, 0);
                 TopLogoOff.WidthRequest = Units.ScreenWidth * 0.8;
@@ -1960,20 +2134,54 @@ namespace Darkaudious
             }
             else
             {
-                ThinkingIndicator.FontSize = Units.DynamicFontSizeM;
+                ThinkingIndicator.FontSize = Units.FontSizeM;
                 InvestigationLabel.FontSize = Units.DynamicFontSizeXXL;
                 InvestigationLabel.Margin = new Thickness(0, Units.ScreenUnitXS, 0, 0);
                 CurrentWord.FontSize = Units.DynamicFontSizeXXXL;
 
                 //CurrentWord.Margin = new Thickness(0, Units.ScreenUnitS, 0, 0);
                 CurrentWord.TranslateTo(0, 0, 0, Easing.Linear);
-                ThinkingIndicator.TranslateTo(0, -160, 0, Easing.Linear);
+                ThinkingIndicator.TranslateTo(0, -150, 0, Easing.Linear);
                 WordMemory = 6;
             }
 
             CurrentWord.FontSize = Units.DynamicFontSizeXXXL;
 
+            SetMood(3);
             this.Content = PageContent;
+        }
+
+        public void SetMood(int mood)
+        {
+            Mood = mood;
+
+            switch(Mood)
+            {
+                case 0:
+                    Phrase1.Opacity = 1.0f;
+                    Phrase2.Opacity = 0.5f;
+                    Phrase3.Opacity = 0.5f;
+                    Phrase4.Opacity = 0.5f;
+                    break;
+                case 1:
+                    Phrase1.Opacity = 0.5f;
+                    Phrase2.Opacity = 1.0f;
+                    Phrase3.Opacity = 0.5f;
+                    Phrase4.Opacity = 0.5f;
+                    break;
+                case 2:
+                    Phrase1.Opacity = 0.5f;
+                    Phrase2.Opacity = 0.5f;
+                    Phrase3.Opacity = 1.0f;
+                    Phrase4.Opacity = 0.5f;
+                    break;
+                default:
+                    Phrase1.Opacity = 0.5f;
+                    Phrase2.Opacity = 0.5f;
+                    Phrase3.Opacity = 0.5f;
+                    Phrase4.Opacity = 1.0f;
+                    break;
+            }
         }
 
         public void ShowHistory()
@@ -2010,6 +2218,98 @@ namespace Darkaudious
             CreateLog();
             DisplayAlert("Session Logged", "Your session has been saved to your device's clipboard. You can now paste this into an email, message, document or wherever you choose. Simply open up the app you'd like to use, then press and hold in a text area to bring up the option to paste your session.", "Ok");
             HideHistory();
+        }
+
+        public void TriggerPhrase(int phraseId, bool spiritTriggered)
+        {
+            IsSpeaking = true;
+            playSignatureMelody = true;
+            SpiritTriggeredMelody = spiritTriggered;
+            if (Numbers.GetNextRandom(0, 100) > 50)
+            {
+                WordsToSpeak = PhraseManager.GetSessionPhrase(phraseId);
+            }
+            else
+            {
+                WordsToSpeak = PhraseManager.ReverseArrayToArray(PhraseManager.GetSessionPhrase(phraseId));
+            }
+            MelodyCount = 0;
+
+           
+        }
+        
+        public void TriggerMelody(int melodyId, int instrument, bool spiritTriggered)
+        {
+            LastPlayedMelody = melodyId;
+            SpiritTriggeredMelody = spiritTriggered;
+            IsSpeaking = false;
+            playSignatureMelody = true;
+            selectedInstrument = instrument;
+            LastInstrumentPlayed = instrument;
+            SignatureMelody = AudioManager.GetSessionMelody(melodyId, Mood);
+
+
+
+            MelodyCount = 0;
+
+            if (spiritTriggered) // easter eggs
+            {
+                selectedInstrument = Numbers.GetNextRandom(0, 3);
+                if (Numbers.GetNextRandom(0, 1000) > 950)
+                {
+                    EntityManager.IncreaseStimulus((int)EntityManager.StimulusTypes.Pressure, 20);
+                    
+                    if (Numbers.GetNextRandom(0, 100) > 75)
+                    {
+                        SignatureMelody = AudioManager.GetMajorTune();
+                    }
+                    else
+                    {
+                        SignatureMelody = AudioManager.GetMinorTune();
+                    }
+                }
+
+                if (Numbers.GetNextRandom(0, 100) > 75)
+                {
+                    EntityManager.IncreaseStimulus((int)EntityManager.StimulusTypes.Random, 50);
+                    selectedInstrument = (int)SoundSources.Noise;
+                    SignatureMelody = AudioManager.GetSpooky();
+                }
+
+            }
+            else
+            {
+                if (Numbers.GetNextRandom(0, 100) > 90)
+                {
+                    EntityManager.IncreaseStimulus((int)EntityManager.StimulusTypes.Random, 2);
+                }
+            }
+
+            if (selectedInstrument == (int)SoundSources.ToyPiano)
+            {
+                PianoSelect.Opacity = 0.5f;
+                ToySelect.Opacity = 1.0f;
+                ToneSelect.Opacity = 0.5f;
+            }
+            else if (selectedInstrument == (int)SoundSources.Piano)
+            {
+                PianoSelect.Opacity = 1.0f;
+                ToySelect.Opacity = 0.5f;
+                ToneSelect.Opacity = 0.5f;
+            }
+            else if (selectedInstrument == (int)SoundSources.Tone)
+            {
+                PianoSelect.Opacity = 0.5f;
+                ToySelect.Opacity = 0.5f;
+                ToneSelect.Opacity = 1.0f;
+            }
+            else
+            {
+                PianoSelect.Opacity = 0.5f;
+                ToySelect.Opacity = 0.5f;
+                ToneSelect.Opacity = 0.5f;
+            }
+
         }
 
         public void SetMode(int mode)
@@ -2062,7 +2362,7 @@ namespace Darkaudious
 
         public void SwitchOff()
         {
-            Speak("Off", false);
+            //Speak("Off", false);
             CurrentWord.Text = "";
 
             if (LoggedWordsList != null)
@@ -2119,7 +2419,31 @@ namespace Darkaudious
             return (float)randEffectOpacity;
         }
 
+        public void ActivityUpdate()
+        {
+            Console.WriteLine("ACT: " + EntityManager.CurrentActivityLevel + "(" + EntityManager.GetCurrentActvityLevelName() + ")");
 
+            FlurryTriggered = false;
+
+            if (Numbers.GetNextRandom(0, 100) > 75)
+            {
+                Console.WriteLine("Flurry Triggered");
+                FlurryTriggered = true;
+            }
+
+            if (EntityManager.GetCurrentActvityLevel() > 3)
+            {
+                TriggerRapidEvents();
+            }
+
+            if (Numbers.GetNextRandom(0, 100) > 75)
+            {
+                TriggerPhrase(Numbers.GetNextRandom(1, 4), true);
+            }
+
+            EntityManager.ResetStimuli();
+            
+        }
 
 
         public void TimedUpdate()
@@ -2127,7 +2451,7 @@ namespace Darkaudious
             if (IsPaused) return;
 
 
-
+            UpdateElements();
 
             Tick();
         }
@@ -2427,18 +2751,23 @@ namespace Darkaudious
 
         public void TriggerRapidEvents()
         {
-            rapidActivityType = Numbers.GetNextRandom(0, 3);
+            rapidActivityType = Numbers.GetNextRandom(0, 4);
             rapidActivityLength = Numbers.GetNextRandom(2, 12);
+
+            // TEST
+            //TriggerMelody(LastPlayedMelody, (int)SoundSources.Noise, true);
         }
-
-
-
 
         public void AudioUpdate()
         {
             if (playSignatureMelody)
             {
                 UpdateMelody();
+                return;
+            }
+
+            if (EntityManager.GetCurrentActvityLevel() < (int)EntityManager.ActivityLevels.MediumActivity)
+            {
                 return;
             }
 
@@ -2457,37 +2786,28 @@ namespace Darkaudious
                 // rapid event note
                 try
                 {
-                    switch (rapidActivityType)
+                    if (rapidActivityType == 4) // speech
                     {
-                        // voice event
-                        case 0:
-                            selectedInstrument = (int)SoundSources.ToyPiano;
-                            AudioManager.SetInstrument(selectedInstrument);
-                            AudioManager.SetSoundSource(selectedInstrument);
-                            break;
-                        // noise event
-                        case 1:
-                            selectedInstrument = (int)SoundSources.Piano;
-                            AudioManager.SetInstrument(selectedInstrument);
-                            AudioManager.SetSoundSource(selectedInstrument);
-                            break;
-                        case 2:
-                            AudioManager.SetSoundSource((int)SoundSources.Noise);
-                            StartEffect();
-                            SpeakSimple(PhraseManager.GetMuttering());
-                            break;
-                        default:
-                            AudioManager.SetSoundSource((int)SoundSources.Noise);
-                            StartEffect();
-                            SpeakSimple(PhraseManager.GetMuttering());
-                            break;
-                            // music event
+                        rapidActivityLength = Numbers.GetNextRandom(1, 3);
+                        SpeakSimple(PhraseManager.GetMuttering());
                     }
-
-                    if (rapidActivityType < 2)
+                    else
                     {
-                        Console.WriteLine("Rapid: " + rapidActivityLength);
-                        AudioManager.PlayNote(rapidNoteLength, NotesToPlay[MelodyCount], true);
+                        selectedInstrument = rapidActivityType;
+
+                        AudioManager.SetInstrument(selectedInstrument);
+                        AudioManager.SetSoundSource(selectedInstrument);
+                        StartEffect();
+
+                        if (rapidActivityType <= 2)
+                        {
+                            Console.WriteLine("Rapid: " + rapidActivityLength);
+                            AudioManager.PlayNote(rapidNoteLength, NotesToPlay[MelodyCount], true);
+                        }
+                        else
+                        {
+
+                        }
                     }
 
                 }
@@ -2520,6 +2840,13 @@ namespace Darkaudious
                 return;
             }
 
+            if (Numbers.GetNextRandom(100) > 90)
+            {
+                TriggerMelody(LastPlayedMelody, LastInstrumentPlayed, true);
+                return;
+            }
+
+
             if (Numbers.GetNextRandom(100) > freq)
             {
                 if (AudioType == AUDIO_SPEECH)
@@ -2528,7 +2855,7 @@ namespace Darkaudious
                 }
                 else
                 {
-                    if (Numbers.GetNextRandom(100) > 90)
+                    if (Numbers.GetNextRandom(100) > 98)
                     {
                         AudioType = AUDIO_SPEECH;
                     }
@@ -2555,8 +2882,8 @@ namespace Darkaudious
             {
                 SpeechUpdate(5);
             }
+            
 
-            //SpeechUpdate();
         }
 
         public void SpeechUpdate(int hitRate)
@@ -2571,13 +2898,22 @@ namespace Darkaudious
             }
         }
 
-
-       
-
         public void UpdateMelody()
         {
             Console.WriteLine("Update melody");
-            selectedInstrument = (int)SoundSources.Piano;
+
+            if (SpiritTriggeredMelody)
+            {
+                if (MelodyCount >= EntityManager.Memory)
+                {
+                    playSignatureMelody = false;
+                    SpiritTriggeredMelody = false;
+                    return;
+                }
+            }
+
+
+            //selectedInstrument = (int)SoundSources.Piano;
             AudioManager.SetInstrument(selectedInstrument);
             AudioManager.SetSoundSource(selectedInstrument);
             
@@ -2592,6 +2928,14 @@ namespace Darkaudious
                 if (IsSpeaking)
                 {
                     length = WordsToSpeak.Length;
+
+                    if (SpiritTriggeredMelody)
+                    {
+                        if (length > EntityManager.Memory)
+                        {
+                            length = EntityManager.Memory;
+                        }
+                    }
                 }
 
                 if (MelodyCount < length)
@@ -2665,35 +3009,56 @@ namespace Darkaudious
             {
 
             }
-            
         }
+
+        bool FlurryTriggered = false;
 
         public void SetSimulatedSensors()
         {
-            if (Numbers.GetNextRandom(100) > 98)
+            
+            int triggerThreshold = Numbers.GetNextRandom(95, 99);
+
+            if (FlurryTriggered)
             {
-                BaroPressure = Numbers.GetNextRandom(980, 1080);
-            }
-            if (Numbers.GetNextRandom(100) > 98)
-            {
-                MagnoX = Numbers.GetNextRandom(0, 10);
-            }
-            if (Numbers.GetNextRandom(100) > 98)
-            {
-                MagnoY = Numbers.GetNextRandom(0, 10);
-            }
-            if (Numbers.GetNextRandom(100) > 98)
-            {
-                MagnoZ = Numbers.GetNextRandom(0, 10);
+                triggerThreshold = Numbers.GetNextRandom(75, 99);
             }
 
-            if (BaroPressure > 1060)
+            if (!Settings.MagnetometerAvailable)
             {
-                // TRIGGER EVENT
-                Console.WriteLine("TRIGGER PRESSURE EVENT");
-                TriggerRapidEvents();
-                BaroPressure = 980;
+                if (Numbers.GetNextRandom(100) > triggerThreshold)
+                {
+                    MagnoX = Numbers.GetNextRandom(0, 10);
+                    EntityManager.IncreaseStimulus((int)EntityManager.StimulusTypes.Magnetic, 1);
+                }
+                if (Numbers.GetNextRandom(100) > triggerThreshold)
+                {
+                    MagnoY = Numbers.GetNextRandom(0, 10);
+                    EntityManager.IncreaseStimulus((int)EntityManager.StimulusTypes.Magnetic, 1);
+                }
+                if (Numbers.GetNextRandom(100) > triggerThreshold)
+                {
+                    MagnoZ = Numbers.GetNextRandom(0, 10);
+                    EntityManager.IncreaseStimulus((int)EntityManager.StimulusTypes.Magnetic, 1);
+                }
+            }
 
+            if (!Settings.BarometerAvailable)
+            {
+                if (Numbers.GetNextRandom(100) > triggerThreshold)
+                {
+                    BaroPressure = Numbers.GetNextRandom(980, 1080);
+                    EntityManager.IncreaseStimulus((int)EntityManager.StimulusTypes.Pressure, 1);
+                }
+
+                if (BaroPressure > 1060)
+                {
+                    // TRIGGER EVENT
+                    Console.WriteLine("TRIGGER PRESSURE EVENT");
+                    //TriggerRapidEvents();
+                    EntityManager.IncreaseStimulus((int)EntityManager.StimulusTypes.Pressure, 5);
+                    BaroPressure = 980;
+
+                }
             }
         }
 
@@ -2718,11 +3083,13 @@ namespace Darkaudious
             string scanFrequencyLabel = "" + (MaxFrequency - ScanFrequency);
 
 
-
             ThinkingIndicator.Text = "STATE: " + spiritState  + "\n" + "MOOD: " + SpiritMood + "\n" + "STRENGTH: " + SpiritStrength + "\n" + "SCAN RATE: " + scanFrequencyLabel + "\n";
 
+            ThinkingIndicator.Text = "AMBIENT STIMULUS: " + EntityManager.GetCurrentActvityLevelName();
 
-            ThinkingIndicator.Text = "SPIRIT ACTIVITY: ";
+
+            ThinkingIndicator.Text += "\n\nSPIRIT ACTIVITY: ";
+
             if (rapidActivityLength > 0)
             {
                 ThinkingIndicator.Text += "PRESENT\n\n";
@@ -2760,7 +3127,6 @@ namespace Darkaudious
             ThinkingIndicator.Text += "\n\n";
 
             
-
 
             scanSkipCount++;
 
@@ -2928,7 +3294,7 @@ namespace Darkaudious
 
             CircuitAnimImage.Source = CurrentEffectName + CurrentEffectFrame + ".png";
 
-
+            
 
         }
 
@@ -2978,12 +3344,117 @@ namespace Darkaudious
 
         string wordsSpoken = "";
 
-        
+        private static Random random = new Random();
+
+        public static string RandomString(int length)
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            return new string(Enumerable.Repeat(chars, length)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
+        }
+
+        int SeekingSkip = 10;
+        int SeekingSkipCount = 0;
+        int ShowLimit = 0;
+        public void WordFadeUpdate()
+        {
+            if (CurrentWord != null)
+            {
+                if (CurrentWord.Opacity > 0)
+                {
+                    SeekingWord.Opacity = 0;
+                    CurrentWord.Opacity -= 0.01;
+                }
+                else
+                {
+
+                    switch(EntityManager.CurrentActivityLevel)
+                    {
+                        case (int)EntityManager.ActivityLevels.NothingHappening:
+                            SeekingSkip = 8;
+                            SeekingWord.Opacity = 0.1f;
+                            SeekingWord.FontSize = Units.DynamicFontSizeXL;
+                            ShowLimit = 90;
+                            break;
+                        case (int)EntityManager.ActivityLevels.LowActivity:
+                            SeekingSkip = 6;
+                            SeekingWord.Opacity = 0.20f;
+                            SeekingWord.FontSize = Units.DynamicFontSizeXL;
+                            ShowLimit = 80;
+                            break;
+                        case (int)EntityManager.ActivityLevels.MediumActivity:
+                            SeekingSkip = 5;
+                            SeekingWord.Opacity = 0.3f;
+                            SeekingWord.FontSize = Units.DynamicFontSizeXXL;
+                            ShowLimit = 70;
+                            break;
+                        case (int)EntityManager.ActivityLevels.HighActivity:
+                            SeekingSkip = 4;
+                            SeekingWord.Opacity = 0.4f;
+                            SeekingWord.FontSize = Units.DynamicFontSizeXXXL;
+                            ShowLimit = 50;
+                            break;
+                        default:
+                            SeekingSkip = 0;
+                            SeekingWord.Opacity = 0.5f;
+                            SeekingWord.FontSize = Units.DynamicFontSizeXXXL;
+                            ShowLimit = 25;
+                            break;
+                    }
+
+                    
+
+
+                    if (EntityManager.CurrentActivityLevel >= (int)EntityManager.ActivityLevels.LowActivity)
+                    {
+                        if (SeekingSkipCount < SeekingSkip)
+                        {
+                            SeekingSkipCount++;
+                        }
+                        else
+                        {
+                            SeekingSkipCount = 0;
+                            SeekingWord.Text = RandomString(Numbers.GetNextRandom(1, 8));
+                            if (Numbers.GetNextRandom(0, 100) > 50)
+                            {
+                                SeekingWord.Text += "\n" + RandomString(Numbers.GetNextRandom(1, 8));
+                            }
+                            if (Numbers.GetNextRandom(0, 100) > 50)
+                            {
+                                SeekingWord.Text += "\n" + RandomString(Numbers.GetNextRandom(1, 8));
+                            }
+
+                            
+                        }
+                    }
+                    else
+                    {
+                        SeekingWord.Opacity = 0.0f;
+                    }
+
+                    if (Numbers.GetNextRandom(0, 100) > ShowLimit)
+                    {
+                        SeekingWord.Opacity = 0f;
+                    }
+
+                }
+            }
+            if (LoggedWordsList != null)
+            {
+                if (LoggedWordsList.Count > 0 && CurrentWord.Opacity == 0)
+                {
+                    LoggedWordsList.Clear();
+                }
+            }
+        }
 
         public bool Tick()
         {
             CurrentTime = DateTime.Now;
 
+            Console.WriteLine("TICK");
+
+            /*
             if (Numbers.GetNextRandom(100) > 10)
             {
                 Console.WriteLine("SKIP");
@@ -3098,7 +3569,7 @@ namespace Darkaudious
                 }
             }
 
-
+*/
 
             try
             {
@@ -3122,31 +3593,7 @@ namespace Darkaudious
                 Console.WriteLine("Movement error");
             }
 
-            /*
-            if (!PerformingEvent)
-            {
-                if (CurrentWord.Text == "-")
-                {
-                    showThinking = !showThinking;
-
-                    if (showThinking)
-                    {
-                        CurrentWord.Opacity = 0.8;
-                    }
-                    else
-                    {
-                        CurrentWord.Opacity = 0;
-                    }
-                } 
-            }
-            else
-            {
-                //CurrentWord.Text = "-";
-                CurrentWord.Opacity = 0.8;
-                showThinking = true;
-            }
-            */
-
+           
             // RANDOMISE ACTIVITY
             if (Numbers.GetNextRandom(0, 100) > 95)
             {
@@ -3161,33 +3608,7 @@ namespace Darkaudious
                 }
             }
 
-            /*
-            if (ScanFrequency > 4)
-            {
-                TopLogo.Source = "dcmainlogo_off.png";
-            }
-            else
-            {
-                if (ScanFrequency <= 2)
-                {
-                    TopLogo.Source = "dcmainlogo_on.png";
-                }
-                else
-                {
-                    if (DateTime.Now.Millisecond % 3 == 0 || DateTime.Now.Millisecond % 7 == 0 || DateTime.Now.Millisecond % 10 == 0)
-                    {
-                        TopLogo.Source = "dcmainlogo_on.png";
-                    }
-                }
-            }
-
-
-            TopLogo.Source = "dcmainlogo_off.png";
-            if (DateTime.Now.Millisecond % 3 == 0 || DateTime.Now.Millisecond % 7 == 0 || DateTime.Now.Millisecond % 10 == 0)
-            {
-                TopLogo.Source = "dcmainlogo_on.png";
-            }
-            */
+         
             return true;
         }
 
@@ -3262,69 +3683,6 @@ namespace Darkaudious
                     }
 
                     Speak(PhraseManager.GetWord(), true);
-
-                    /*
-                    if (eventType >= 0 && eventType < 2000)
-                    {
-                        //await Task.Delay(1000);
-                        if (Numbers.GetNextRandom(0, 100) > 25)
-                        {
-                            Speak(PhraseManager.GetFeeling(), true);
-                        }
-                        else
-                        {
-                            Speak(PhraseManager.GetCurrentFeeling(), true);
-                        }
-
-                    }
-                    else if (eventType >= 2000 && eventType < 5000)
-                    {
-                        //await Task.Delay(1000);
-                        Speak(PhraseManager.GetWord(), true);
-                    }
-                    else if (eventType >= 5000 && eventType < 8000)
-                    {
-                        //await Task.Delay(1000);
-                        Speak(PhraseManager.GetItem(), true);
-                    }
-                    else if (eventType >= 8000 && eventType < 8500)
-                    {
-                        // fairly commoon
-                        //await Task.Delay(1000);
-                        Speak(PhraseManager.GetSombodysItem(), true);
-                    }
-                    else if (eventType >= 8500 && eventType < 9000)
-                    {
-                        //await Task.Delay(1000);
-                        Speak(PhraseManager.GetDescriptiveItem(), true);
-                    }
-                    else if (eventType >= 9000 && eventType < 9500)
-                    {
-                        // fairly commoon
-                        //await Task.Delay(1000);
-                        Speak(PhraseManager.GetSombodysItem(), true);
-                    }
-                    else if (eventType >= 9500 && eventType < 9750)
-                    {
-                        // rare
-                        //await Task.Delay(1000);
-                        Speak(PhraseManager.GetFeelingPhrase(), true);
-
-                    }
-                    else if (eventType >= 9750)
-                    {
-                        // rare
-                        //await Task.Delay(1000);
-                        Speak(PhraseManager.GetSimpleSentence(), true);
-                    }
-
-
-                    // just stupid - don't do this
-                    //await Task.Delay(1000);
-                    //Speak(PhraseManager.GetComplexSentence());
-
-                    RepeatWord(eventType);*/
-
                 }
                 if (EventDelay > EVENT_SPEED_MEDIUM)
                 {
@@ -3333,15 +3691,6 @@ namespace Darkaudious
                     StopEffect();
                 }
                 SetSpeed();
-
-                /*
-                CurrentWord.Text = "";
-                string newWord = PhraseManager.GetWord();
-                wordsSpoken += newWord + "\n";
-                Speak(newWord);
-                Console.WriteLine(wordsSpoken);
-                Console.WriteLine("EVENT FINISHED");
-                */
 
                 PerformingEvent = false;
 
@@ -3599,6 +3948,22 @@ namespace Darkaudious
             try
             {
                 TextToSpeech.SpeakAsync(word.ToLower());
+                if (LoggedWordsList == null)
+                {
+                    LoggedWordsList = new List<string>();
+                }
+                string toSpeak = word.ToUpper();
+                LoggedWordsList.Add(toSpeak);
+
+
+                //CurrentWord.Text = word;
+
+                WordMemory = 3;
+                toSpeak = GetLoggedWords(WordMemory);
+                CurrentWord.Text = GetLoggedWords(WordMemory).ToLower().Replace(" ", "\n");
+                //CurrentWord.Text = toSpeak;
+                CurrentWord.Opacity = 1.0f;
+
             }
             catch(Exception e)
             {
@@ -3608,7 +3973,16 @@ namespace Darkaudious
 
         public void Speak(string word, bool allowBeep)
         {
-           
+            SpeakSimple(word);
+
+            
+
+
+
+            //CurrentWord.Text = toSpeak.ToLower().Replace(" ", "\n");
+            //GetLoggedWords(WordMemory);
+
+            /*
             if (CurrentEvent == (int)DarkaudiousEvents.DarkaudiousSpoken)
             {
                 
@@ -3696,6 +4070,7 @@ namespace Darkaudious
 
 
             WordHistory.Text = GetLog();
+            */
         }
 
 
@@ -3807,22 +4182,69 @@ namespace Darkaudious
             try
             {
                 ClearImage.Opacity = 0.25;
-                HistoryImage.Opacity = 0.25;
-                InfoImage.Opacity = 0.25;
+                HistoryImage.Source = "copy_off.png";
+                //InfoImage.Opacity = 0.25;
+                InfoImage.Source = "info_off.png";
+
+                //Phrase1.Opacity = 0.25f;
+                //Phrase2.Opacity = 0.25f;
+                //Phrase3.Opacity = 0.25f;
+                //Phrase4.Opacity = 0.25f;
+                //Tune1.Opacity = 0.25f;
+                //Tune1.Opacity = 0.25f;
+                //Tune1.Opacity = 0.25f;
+                //Tune1.Opacity = 0.25f;
+
+
+
+                if (selectedInstrument == (int)SoundSources.Piano)
+                {
+                    PianoSelect.Opacity = 1.0f;
+                    ToySelect.Opacity = 0.5f;
+                    ToneSelect.Opacity = 0.5f;
+                }
+
+                if (selectedInstrument == (int)SoundSources.ToyPiano)
+                {
+                    PianoSelect.Opacity = 0.5f;
+                    ToySelect.Opacity = 1.0f;
+                    ToneSelect.Opacity = 0.5f;
+                }
+
+                if (selectedInstrument == (int)SoundSources.Tone)
+                {
+                    PianoSelect.Opacity = 0.5f;
+                    ToySelect.Opacity = 0.5f;
+                    ToneSelect.Opacity = 1.0f;
+                }
+
+
                 if (DeadboxOn)
                 {
-                    PowerImage.Source = "switchOn.png";//"power2.png";
+                    Phrase1.IsVisible = true;
+                    Phrase2.IsVisible = true;
+                    Phrase3.IsVisible = true;
+                    Phrase4.IsVisible = true;
+                    Tune1.IsVisible = true;
+                    Tune2.IsVisible = true;
+                    Tune3.IsVisible = true;
+                    Tune4.IsVisible = true;
+                    SeekingWord.IsVisible = true;
+
+                    PowerImage.Source = "power_on.png";//"power2.png";
                     StartStopImage.Opacity = 1.0f;
                     Mask.Opacity = 0.75f;
                     ThinkingIndicator.Opacity = 0.75f;
                     InvestigationLabel.Opacity = 0.75f;
-                    InfoImage.Opacity = 0.75;
+                    //InfoImage.Opacity = 0.75;
+                    InfoImage.Opacity = 1.0f;
+                    InfoImage.Source = "info_on.png";
                     if (LoggedWordsList != null)
                     {
                         if (LoggedWordsList.Count > 0)
                         {
                             ClearImage.Opacity = 1.0;
-                            HistoryImage.Opacity = 1.0;
+                            HistoryImage.Source = "copy_on.png";
                         }
                     }
 
@@ -3878,10 +4300,13 @@ namespace Darkaudious
                     {
                         SoundButton.Opacity = 0.25f;
                     }
+
+                    
+
                 }
                 else
                 {
-                    PowerImage.Source = "switchOff.png";// "power2off.png";
+                    PowerImage.Source = "power_off.png";// "power2off.png";
                     TopLogoOn.Opacity = 0.0f;
                     TopLogoOff.Opacity = 0.25f;
                     StartStopImage.Opacity = 0.25f;
@@ -3889,7 +4314,10 @@ namespace Darkaudious
                     ThinkingIndicator.Opacity = 0.0f;
                     InvestigationLabel.Opacity = 0.25f;
                     ClearImage.Opacity = 0.25f;
-                    HistoryImage.Opacity = 0.25f;
+                    //HistoryImage.Opacity = 0.25f;
+
+                    HistoryImage.Source = "copy_off.png";
+
 
                     SoundButton.Opacity = 0.25f;
                     SpeechButton.Opacity = 0.25f;
@@ -3897,7 +4325,19 @@ namespace Darkaudious
 
                     PlusImage.Opacity = 0.25f;
                     MinusImage.Opacity = 0.25f;
-                    InfoImage.Opacity = 0.25;
+                    //InfoImage.Opacity = 0.25;
+
+                    InfoImage.Source = "info_off.png";
+
+                    Phrase1.IsVisible = false;
+                    Phrase2.IsVisible = false;
+                    Phrase3.IsVisible = false;
+                    Phrase4.IsVisible = false;
+                    Tune1.IsVisible = false;
+                    Tune2.IsVisible = false;
+                    Tune3.IsVisible = false;
+                    Tune4.IsVisible = false;
+                    SeekingWord.IsVisible = false;
                 }
 
                 if (DeadboxOn)
@@ -3978,8 +4418,8 @@ namespace Darkaudious
                     }
                 }
             }
+            
 
-           
         }
 
         public void UpdateLights()

@@ -274,7 +274,7 @@ namespace Darkaudious.Helpers
             {
                 octave = 1;
             }
-
+            /*
             switch (note)
             {
                 case (int)Notes.ShortA:
@@ -338,15 +338,27 @@ namespace Darkaudious.Helpers
                     fileToPlay = "Ab" + octave + ".mp3";
                     break;
 
-            }
+            }*/
 
             if (SoundSource == (int)SoundSources.ToyPiano)
             {
-                fileToPlay = NoteDictionary[note] + ".mp3";
+                fileToPlay = "TP_" + NoteDictionary[note] + ".mp3";
+            }
+
+            if (SoundSource == (int)SoundSources.Piano)
+            {
+                fileToPlay = "GP_" + NoteDictionary[note] + ".mp3";
+            }
+
+            if (SoundSource == (int)SoundSources.Tone)
+            {
+                fileToPlay = "SQ_" + NoteDictionary[note] + ".mp3";
             }
 
             if (SoundSource == (int)SoundSources.Noise)
             {
+                fileToPlay = "NS_" + NoteDictionary[note] + ".mp3";
+                /*
                 string noiseType = "n";
 
                 if (Numbers.GetNextRandom(100) > 50)
@@ -354,6 +366,7 @@ namespace Darkaudious.Helpers
                     noiseType = "ma";
                 }
                 fileToPlay = noiseType + Numbers.GetNextRandom(9) + ".mp3";
+                */
             }
 
             Console.WriteLine("Playing: " + fileToPlay);
@@ -385,8 +398,9 @@ namespace Darkaudious.Helpers
 
             try
             {
+                string noteFile = GetAudioFileName(note, false);
                 //AudioPlayer.Volume = volume;
-                AudioPlayer.Load(NoteDictionary[note] + ".mp3");
+                AudioPlayer.Load(noteFile);// NoteDictionary[note] + ".mp3");
                 AudioPlayer.Play();
             }
             catch (Exception e)
@@ -712,17 +726,51 @@ namespace Darkaudious.Helpers
                 (int)Notes.LongE, (int)Notes.ShortG, (int)Notes.ShortFSharp, (int)Notes.LongE
         };
 
+        public static int[] SpookyStuff = null;
+
+        public int[] GetSpooky()
+        {
+            SpookyStuff = new int[Numbers.GetNextRandom(4, 16)];
+
+            for (int i = 0; i < SpookyStuff.Length; i++)
+            {
+                SpookyStuff[i] = Numbers.GetNextRandom(0, 35);
+            }
+
+            return SpookyStuff;
+        }
 
         public static int[] SessionMelody1 = null;
         public static int[] SessionMelody2 = null;
         public static int[] SessionMelody3 = null;
         public static int[] SessionMelody4 = null;
 
+        public static int[] MinorMelody1 = null;
+        public static int[] MinorMelody2 = null;
+        public static int[] MinorMelody3 = null;
+        public static int[] MinorMelody4 = null;
+
+
+        public static int[] MajorMelody1 = null;
+        public static int[] MajorMelody2 = null;
+        public static int[] MajorMelody3 = null;
+        public static int[] MajorMelody4 = null;
+
+
+        public static int[] RandomMelody1 = null;
+        public static int[] RandomMelody2 = null;
+        public static int[] RandomMelody3 = null;
+        public static int[] RandomMelody4 = null;
+
+
+        public int MelodyLengthMin = 3;
+        public int MelodyLengthMax = 6;
+
         public void PopulateSessionMelodys()
         {
             if (SessionMelody1 == null)
             {
-                SessionMelody1 = new int[Numbers.GetNextRandom(3, 7)];
+                SessionMelody1 = new int[Numbers.GetNextRandom(MelodyLengthMin, MelodyLengthMax)];
 
                 for (int i = 0; i < SessionMelody1.Length; i++)
                 {
@@ -732,7 +780,7 @@ namespace Darkaudious.Helpers
 
             if (SessionMelody2 == null)
             {
-                SessionMelody2 = new int[Numbers.GetNextRandom(4, 7)];
+                SessionMelody2 = new int[Numbers.GetNextRandom(MelodyLengthMin, MelodyLengthMax)];
 
                 for (int i = 0; i < SessionMelody2.Length; i++)
                 {
@@ -742,7 +790,7 @@ namespace Darkaudious.Helpers
 
             if (SessionMelody3 == null)
             {
-                SessionMelody3 = new int[Numbers.GetNextRandom(4, 8)];
+                SessionMelody3 = new int[Numbers.GetNextRandom(MelodyLengthMin, MelodyLengthMax)];
 
                 for (int i = 0; i < SessionMelody3.Length; i++)
                 {
@@ -752,7 +800,7 @@ namespace Darkaudious.Helpers
 
             if (SessionMelody4 == null)
             {
-                SessionMelody4 = new int[Numbers.GetNextRandom(5, 10)];
+                SessionMelody4 = new int[Numbers.GetNextRandom(MelodyLengthMin, MelodyLengthMax)];
 
                 for (int i = 0; i < SessionMelody4.Length; i++)
                 {
@@ -760,11 +808,168 @@ namespace Darkaudious.Helpers
                 }
             }
 
+            
+
+            MajorMelody1 = ChangeMood(SessionMelody1, 0);
+            MajorMelody2 = ChangeMood(SessionMelody2, 0);
+            MajorMelody3 = ChangeMood(SessionMelody3, 0);
+            MajorMelody4 = ChangeMood(SessionMelody4, 0);
+
+            MinorMelody1 = ChangeMood(SessionMelody1, 1);
+            MinorMelody2 = ChangeMood(SessionMelody2, 1);
+            MinorMelody3 = ChangeMood(SessionMelody3, 1);
+            MinorMelody3 = ChangeMood(SessionMelody4, 1);
+
+
+            RandomMelody1 = ChangeMood(SessionMelody1, 2);
+            RandomMelody2 = ChangeMood(SessionMelody2, 2);
+            RandomMelody3 = ChangeMood(SessionMelody3, 2);
+            RandomMelody4 = ChangeMood(SessionMelody4, 2);
+
             Console.WriteLine("Session Tunes Created");
 
         }
 
-        public int[] GetSessionMelody(int num)
+        public int [] ChangeMood(int[] input, int mood)
+        {
+            List<int> output = new List<int>();
+            int length = input.Length;
+            int key = Numbers.GetNextRandom(0, 12);
+
+            Console.WriteLine("Length before " + length);
+            while(length%3 != 0)
+            {
+                length++;
+            }
+            Console.WriteLine("Length after " + length);
+
+            for (int i=0; i<=length-3; i+=3)
+            {
+                Console.WriteLine("TRIAD  " + i);
+                int[] triad = null;
+
+                if (mood == 0)
+                {
+                    triad = RandomiseSequenceNoteLength(GetMajorTriad(Numbers.GetNextRandom(0, 12), 0));
+
+                }
+                else if (mood == 1)
+                {
+                    triad = RandomiseSequenceNoteLength(GetMinorTriad(Numbers.GetNextRandom(0, 12), 0));
+                }
+                else
+                {
+                    triad = RandomiseSequenceNoteLength(GetRandomTriad(Numbers.GetNextRandom(0, 12), 0));
+                }
+
+
+
+                foreach (int note in triad)
+                {
+                    output.Add(note);
+                }
+            }
+            return output.ToArray();
+        }
+
+        public int [] RandomiseSequenceNoteLength(int [] notes)
+        {
+            int[] output = new int[notes.Length];
+
+            for(int i=0; i<notes.Length; i++)
+            {
+                output[i] = RandomiseNoteLength(notes[i]);
+            }
+
+            return output;
+        }
+
+        public int RandomiseNoteLength(int note)
+        {
+            int newNote = (int)Notes.ShortA;
+            int length = 0;
+
+            int rand = Numbers.GetNextRandom(0, 100);
+
+            if (rand >=0 && rand < 33)
+            {
+                length = 1;
+            }
+            else if (rand >= 33 && rand < 66)
+            {
+                length = 2;
+            }
+
+
+            switch (note)
+            {
+                case (int)StandardNotes._A:
+                    if (length == 0) { newNote = (int)Notes.ShortA;  }
+                    else if (length == 1) { newNote = (int)Notes.MidA;  }
+                    else { newNote = (int)Notes.LongA; }
+                    break;
+                case (int)StandardNotes._ASharp:
+                    if (length == 0) { newNote = (int)Notes.ShortASharp; }
+                    else if (length == 1) { newNote = (int)Notes.MidASharp; }
+                    else { newNote = (int)Notes.LongASharp; }
+                    break;
+                case (int)StandardNotes._B:
+                    if (length == 0) { newNote = (int)Notes.ShortB; }
+                    else if (length == 1) { newNote = (int)Notes.MidB; }
+                    else { newNote = (int)Notes.LongB; }
+                    break;
+                case (int)StandardNotes._C:
+                    if (length == 0) { newNote = (int)Notes.ShortC; }
+                    else if (length == 1) { newNote = (int)Notes.MidC; }
+                    else { newNote = (int)Notes.LongC; }
+                    break;
+                case (int)StandardNotes._CSharp:
+                    if (length == 0) { newNote = (int)Notes.ShortCSharp; }
+                    else if (length == 1) { newNote = (int)Notes.MidCSharp; }
+                    else { newNote = (int)Notes.LongCSharp; }
+                    break;
+                case (int)StandardNotes._D:
+                    if (length == 0) { newNote = (int)Notes.ShortD; }
+                    else if (length == 1) { newNote = (int)Notes.MidD; }
+                    else { newNote = (int)Notes.LongD; }
+                    break;
+                case (int)StandardNotes._DSharp:
+                    if (length == 0) { newNote = (int)Notes.ShortDSharp; }
+                    else if (length == 1) { newNote = (int)Notes.MidDSharp; }
+                    else { newNote = (int)Notes.LongDSharp; }
+                    break;
+                case (int)StandardNotes._E:
+                    if (length == 0) { newNote = (int)Notes.ShortE; }
+                    else if (length == 1) { newNote = (int)Notes.MidE; }
+                    else { newNote = (int)Notes.LongE; }
+                    break;
+                case (int)StandardNotes._F:
+                    if (length == 0) { newNote = (int)Notes.ShortF; }
+                    else if (length == 1) { newNote = (int)Notes.MidF; }
+                    else { newNote = (int)Notes.LongF; }
+                    break;
+                case (int)StandardNotes._FSharp:
+                    if (length == 0) { newNote = (int)Notes.ShortFSharp; }
+                    else if (length == 1) { newNote = (int)Notes.MidFSharp; }
+                    else { newNote = (int)Notes.LongFSharp; }
+                    break;
+                case (int)StandardNotes._G:
+                    if (length == 0) { newNote = (int)Notes.ShortG; }
+                    else if (length == 1) { newNote = (int)Notes.MidG; }
+                    else { newNote = (int)Notes.LongG; }
+                    break;
+                case (int)StandardNotes._GSharp:
+                    if (length == 0) { newNote = (int)Notes.ShortGSharp; }
+                    else if (length == 1) { newNote = (int)Notes.MidGSharp; }
+                    else { newNote = (int)Notes.LongGSharp; }
+                    break;
+
+            }
+            return newNote;
+        }
+
+
+        public int[] GetSessionMelody(int num, int mood)
         {
             if (SessionMelody1 == null)
             {
@@ -795,12 +1000,86 @@ namespace Darkaudious.Helpers
                     break;
             }
 
+            if (mood == 0)
+            {
+                switch (num)
+                {
+                    case 0:
+                        sessionMelody = MajorMelody1;
+                        break;
+                    case 1:
+                        sessionMelody = MajorMelody1;
+                        break;
+                    case 2:
+                        sessionMelody = MajorMelody2;
+                        break;
+                    case 3:
+                        sessionMelody = MajorMelody3;
+                        break;
+                    case 4:
+                        sessionMelody = MajorMelody4;
+                        break;
+                    default:
+                        sessionMelody = MajorMelody4;
+                        break;
+                }
+            }
+            else if(mood == 1)
+            {
+                switch (num)
+                {
+                    case 0:
+                        sessionMelody = MinorMelody1;
+                        break;
+                    case 1:
+                        sessionMelody = MinorMelody1;
+                        break;
+                    case 2:
+                        sessionMelody = MinorMelody2;
+                        break;
+                    case 3:
+                        sessionMelody = MinorMelody3;
+                        break;
+                    case 4:
+                        sessionMelody = MinorMelody4;
+                        break;
+                    default:
+                        sessionMelody = MinorMelody4;
+                        break;
+                }
+            }
+            else if (mood == 2)
+            {
+                switch (num)
+                {
+                    case 0:
+                        sessionMelody = RandomMelody1;
+                        break;
+                    case 1:
+                        sessionMelody = RandomMelody1;
+                        break;
+                    case 2:
+                        sessionMelody = RandomMelody2;
+                        break;
+                    case 3:
+                        sessionMelody = RandomMelody3;
+                        break;
+                    case 4:
+                        sessionMelody = RandomMelody4;
+                        break;
+                    default:
+                        sessionMelody = RandomMelody4;
+                        break;
+                }
+            }
+
+
             return sessionMelody;
         }
 
-        public int [] GetSessionMelody()
+        public int [] GetSessionMelody(int mood)
         {
-            return GetSessionMelody(Numbers.GetNextRandom(0, 3));
+            return GetSessionMelody(Numbers.GetNextRandom(0, 3), mood);
         }
 
         public int[] GetSignatureMelody()

@@ -130,12 +130,14 @@ namespace Darkaudious.Helpers
         public static int DeviceStatusBarHeight = 24;
 
         public static bool SmallScreen = false;
+        public static bool ShortScreen = false;
 
         public static void Init(int width, int height, int pixelWidth, int pixelHeight, int statusBarHeight)
         {
             PixelWidth = pixelWidth;
             PixelHeight = pixelHeight;
             Init(width, height, statusBarHeight);
+
         }
         public static void Init(int width, int height, int statusBarHeight)
         {
@@ -217,6 +219,19 @@ namespace Darkaudious.Helpers
             SetScalableUnits(Scale);
 
             SmallScreen = false;
+            ShortScreen = false;
+
+
+            if (ScreenWidth < 400)
+            {
+                SmallScreen = true;
+            }
+
+            if (ScreenHeight < 800)
+            {
+                ShortScreen = true;
+            }
+
             TransitionFast = 250;
         }
 
@@ -253,6 +268,11 @@ namespace Darkaudious.Helpers
             if (PixelWidth < 400)
             {
                 SmallScreen = true;
+            }
+
+            if (pixelHeight < 800)
+            {
+                ShortScreen = true;
             }
 
         }

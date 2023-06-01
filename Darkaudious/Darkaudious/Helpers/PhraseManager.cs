@@ -377,6 +377,44 @@ namespace Darkaudious.Helpers
             return new String(array);
         }
 
+        string[] Hints =
+        {
+            "play a tune",
+            "stay still",
+            "move around",
+            "make a noise",
+            "stop moving",
+            "be quiet",
+            "too quiet",
+            "too noisy",
+            "play sad tune",
+            "play happy tune",
+            "happy music",
+            "sad music",
+            "shush",
+            "no noise",
+            "more noise",
+            "play",
+            "play happy",
+            "sad sound",
+            "not sad",
+            "make sad",
+            "sound",
+            "noise",
+            "more",
+            "speak",
+            "say word",
+            "make sad",
+            "like music",
+            "hate sound",
+            "peace"
+        };
+
+        public string [] GetHint()
+        {
+            return Hints[Numbers.GetNextRandom(0, Hints.Length - 1)].Split(' ');
+        }
+
         public string[] GetSessionPhrase(int num)
         {
             string[] phrase = SessionPhrase1;
@@ -507,6 +545,28 @@ namespace Darkaudious.Helpers
                 SessionDictionary.Add(GetAdjective(index));
                 SessionDictionary.Add(GetAdverb(index));
             }
+
+            SessionDictionary.Add("FEAR");
+            SessionDictionary.Add("HATE");
+            SessionDictionary.Add("LEAVE");
+            SessionDictionary.Add("STOP");
+            SessionDictionary.Add("HERE");
+            SessionDictionary.Add("YES");
+            SessionDictionary.Add("NO");
+            SessionDictionary.Add("GO");
+            SessionDictionary.Add("HIDE");
+            SessionDictionary.Add("HIDDEN");
+            SessionDictionary.Add("PAIN");
+            SessionDictionary.Add("YEARS");
+            SessionDictionary.Add("LONELY");
+            SessionDictionary.Add("CHILD");
+            SessionDictionary.Add("EVIL");
+            SessionDictionary.Add("DEMON");
+            SessionDictionary.Add("HERE");
+            SessionDictionary.Add("SPIRIT");
+            SessionDictionary.Add("DEAD");
+            SessionDictionary.Add("ANGRY");
+
 
             Console.WriteLine("-------- START UNIQUE KEYS --------");
             foreach(string word in SessionDictionary)
@@ -859,6 +919,7 @@ namespace Darkaudious.Helpers
             }
             return GetPreposition();
         }
+
 
 
         public string GetSimpleSentence()

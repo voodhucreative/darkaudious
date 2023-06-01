@@ -5,6 +5,8 @@ using Xamarin.Essentials;
 using Xamarin.Forms.Shapes;
 using Plugin.SimpleAudioPlayer;
 using static Darkaudious.Helpers.AudioManager;
+using static System.Net.Mime.MediaTypeNames;
+using System.Text.RegularExpressions;
 
 namespace Darkaudious.Helpers
 {
@@ -436,7 +438,57 @@ namespace Darkaudious.Helpers
 
         }
 
-       
+        public int[] LocationMelody;
+        public int LocationMelodyLength = 16;
+
+        public void UpdateLocationMelody(Location location)
+        {
+            string key = Regex.Replace(location.Latitude.ToString() + location.Longitude.ToString() + location.Altitude.ToString(), "[^0-9]", "");
+            char[] nums = key.ToCharArray();
+
+            int extraCharsPos = 0;
+            while (key.Length < LocationMelodyLength)
+            {
+                key += nums[extraCharsPos];
+                if (extraCharsPos < nums.Length-1)
+                {
+                    extraCharsPos++;
+                }
+                else
+                {
+                    extraCharsPos = 0;
+                }
+            }
+            LocationMelody = new int[LocationMelodyLength];
+
+            int numPos = 0;
+            foreach(char c in key.ToCharArray())
+            {
+                if (numPos < LocationMelodyLength)
+                {
+                    LocationMelody[numPos] = Int32.Parse(c.ToString());
+                    numPos++;
+                }
+            }
+
+
+            Console.WriteLine(key);
+
+        }
+
+        public int[] GetLocationMelody()
+        {
+            if (LocationMelody == null)
+            {
+                LocationMelody = new int[LocationMelodyLength];
+                for(int i=0; i<LocationMelody.Length-1; i++)
+                {
+                    LocationMelody[i] = Numbers.GetNextRandom(0, 9);
+                }
+            }
+            return LocationMelody;
+        }
+
 
         public void PlayNote(int length, int note, bool randomiseOctave)
         {
